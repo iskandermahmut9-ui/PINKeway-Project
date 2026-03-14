@@ -1,12 +1,13 @@
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import os
-from dotenv import load_dotenv
 import time
 import threading
 from supabase import create_client, Client
+from flask import Flask
 
-# Загружаем ключи из нашего сейфа .env
+# Загружаем ключи (на компьютере из .env, на сервере из настроек)
+from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -14,38 +15,33 @@ ADMIN_ID = os.getenv("ADMIN_ID")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# Подключаем бота и базу данных
 bot = telebot.TeleBot(TOKEN)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Команда /start (Кнопка для клиентов)
+# --- WEB СЕРВЕР ДЛЯ RENDER И UPTIMEROBOT ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Бот PINKeway работает и не спит! 🚀"
+
+# --- ЛОГИКА БОТА ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
-    # Кнопка Web App (открывает сайт прямо внутри Telegram)
     webapp_btn = InlineKeyboardButton(
         text="🗓 Открыть календарь", 
         web_app=telebot.types.WebAppInfo(url="https://iskandermahmut9-ui.github.io/PINKeway-Project/frontend/")
     )
     markup.add(webapp_btn)
-    bot.send_message(
-        message.chat.id, 
-        "🎀 Добро пожаловать в фотостудию PINKeway!\n\nНажмите кнопку ниже, чтобы выбрать зал и время:", 
-        reply_markup=markup
-    )
+    bot.send_message(message.chat.id, "🎀 Добро пожаловать!\n\nНажмите кнопку ниже, чтобы забронировать зал:", reply_markup=markup)
 
-# Фоновая проверка новых броней
 def check_new_bookings():
     while True:
         try:
-            # Ищем брони, о которых мы еще не уведомляли (is_notified = False)
             response = supabase.table("booking").select("*").eq("is_notified", False).execute()
-            bookings = response.data
-            
-            for b in bookings:
-                # Собираем красивое сообщение (как на вашем скриншоте)
+            for b in response.data:
                 times_str = ", ".join(b['booking_times']) if isinstance(b['booking_times'], list) else b['booking_times']
-                
                 text = (
                     f"🔔 *НОВАЯ БРОНЬ!*\n\n"
                     f"📍 Зал: {b['hall_name']}\n"
@@ -56,21 +52,20 @@ def check_new_bookings():
                     f"🕒 Время: {times_str}\n"
                     f"💰 Сумма: {b['total_price']} ₽\n"
                 )
-                
-                # Отправляем сообщение администратору
                 bot.send_message(ADMIN_ID, text, parse_mode="Markdown")
-                
-                # Ставим галочку в базе, что уведомление отправлено
                 supabase.table("booking").update({"is_notified": True}).eq("id", b["id"]).execute()
         except Exception as e:
-            print("Ошибка при проверке базы:", e)
-        
-        # Ждем 10 секунд перед следующей проверкой
+            print("Ошибка БД:", e)
         time.sleep(10)
 
-if __name__ == '__main__':
-    print("🤖 Бот запущен! Жду новые брони...")
-    # Запускаем проверку базы в параллельном режиме
-    threading.Thread(target=check_new_bookings, daemon=True).start()
-    # Включаем бота
+def run_bot():
     bot.infinity_polling()
+
+if __name__ == '__main__':
+    # Запускаем проверку базы и самого бота в фоновых потоках
+    threading.Thread(target=check_new_bookings, daemon=True).start()
+    threading.Thread(target=run_bot, daemon=True).start()
+    
+    # Запускаем веб-сервер (обязательно для Render)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
