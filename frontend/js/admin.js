@@ -72,6 +72,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         tbody.innerHTML = ''; // Очищаем таблицу перед вставкой
+        // --- СЧИТАЕМ СТАТИСТИКУ ЗА ТЕКУЩИЙ МЕСЯЦ ---
+        let totalRevenue = 0;
+        let totalConfirmed = 0;
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+
+        bookings.forEach(b => {
+            const bDate = new Date(b.booking_date);
+            // Считаем только подтвержденные брони текущего месяца и года
+            if (b.status === 'confirmed' && bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear) {
+                totalRevenue += b.total_price;
+                totalConfirmed += 1;
+            }
+        });
+
+        // Выводим цифры на экран (с красивыми пробелами в тысячах)
+        document.getElementById('monthlyRevenue').textContent = totalRevenue.toLocaleString('ru-RU') + ' ₽';
+        document.getElementById('monthlyBookings').textContent = totalConfirmed;
+        // ------------------------------------------
 
         bookings.forEach(booking => {
             const tr = document.createElement('tr');

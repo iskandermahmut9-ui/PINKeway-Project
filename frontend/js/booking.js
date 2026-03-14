@@ -228,9 +228,11 @@ async function submitBooking() {
         return;
     }
 
+    // --- ВОТ ЗДЕСЬ ИСПРАВЛЕНИЕ ---
     bookingData.clientName = name;
-    // Остальной код отправки оставляем без изменений...
+    bookingData.clientPhone = phone; // <-- Вернули телефон на место!
     bookingData.clientTg = tg;
+    // -----------------------------
 
     const finishBtn = document.getElementById('btn-finish');
     finishBtn.textContent = 'Оформляем...';
