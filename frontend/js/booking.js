@@ -148,14 +148,55 @@ function generateDates() {
     generateTimeSlots();
 }
 
-function generateTimeSlots() {
+async function generateTimeSlots() {
     const grid = document.getElementById('timeGrid');
     grid.innerHTML = '';
     
     // Время работы: с 9:00 до 21:00 (последний слот начнется в 20:00)
     const startHour = 9;
     const endHour = 20;
-    const occupiedSlots = ['14:00', '15:00']; // Имитация занятого времени
+    
+    // --- НАЧАЛО НОВОГО БЛОКА: Получаем реальные данные из базы ---
+    let occupiedSlots = []; // Теперь это пустой список, который мы заполним из базы
+
+    // ❗️ ВАЖНО: Проверьте, как у вас в коде называются переменные выбранного зала и даты.
+    // Я использую bookingData, но если у вас иначе - поправьте эти две строчки:
+    const currentHall = bookingData.hallName; // например, 'Атлантис'
+    const currentDate = bookingData.bookingDate; // например, '2026-03-14'
+
+    if (currentHall && currentDate) {
+        try {
+            // Ищем в базе брони: нужный зал + нужная дата + статус "Подтверждено"
+            const { data, error } = await _supabase
+                .from('booking')
+                .select('booking_times')
+                .eq('hall_name', currentHall)
+                .eq('booking_date', currentDate)
+                .eq('is_confirmed', true);
+
+            if (error) throw error;
+
+            // Если база вернула занятые часы, аккуратно складываем их в наш список
+            if (data) {
+                data.forEach(booking => {
+                    // booking.booking_times может быть массивом ['10:00', '11:00'] или строкой
+                    let times = booking.booking_times;
+                    if (typeof times === 'string') {
+                        try { times = JSON.parse(times); } catch (e) { times = [times]; }
+                    }
+                    if (Array.isArray(times)) {
+                        occupiedSlots.push(...times);
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Ошибка при проверке занятых слотов:', err);
+        }
+    }
+    // --- КОНЕЦ НОВОГО БЛОКА ---
+
+    // 👇 ДАЛЬШЕ ОСТАВЛЯЕТЕ ВАШ КОД БЕЗ ИЗМЕНЕНИЙ 👇
+    // (тут у вас должен идти цикл for, который рисует кнопки и проверяет occupiedSlots.includes(...))
 
     for (let i = startHour; i <= endHour; i++) {
         const timeString = `${i}:00`;
