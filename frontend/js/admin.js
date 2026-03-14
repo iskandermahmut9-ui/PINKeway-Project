@@ -8,27 +8,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errorText = document.getElementById('loginError');
     const tbody = document.getElementById('bookingsTableBody');
 
-    // 1. ПРОВЕРКА: Авторизован ли админ сейчас?
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        showDashboard();
-    }
+    // Переменные для календаря
+    let adminNavDate = new Date();
+    let adminSelectedDateStr = formatDate(new Date()); 
+    const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+    const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
-    // 2. ЛОГИН
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) { showDashboard(); }
+
     loginBtn.addEventListener('click', async () => {
         const email = document.getElementById('adminEmail').value;
         const password = document.getElementById('adminPassword').value;
-        
         loginBtn.textContent = 'Вход...';
         
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
             errorText.style.display = 'block';
-            errorText.textContent = 'Неверный email или пароль';
             loginBtn.textContent = 'Войти';
         } else {
             errorText.style.display = 'none';
@@ -36,43 +33,149 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // 3. ВЫХОД
     logoutBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         await supabaseClient.auth.signOut();
-        location.reload(); // Перезагружаем страницу
+        location.reload(); 
     });
 
-    // 4. ПОКАЗЫВАЕМ ТАБЛИЦУ
-    async function showDashboard() {
+    function showDashboard() {
         loginSection.style.display = 'none';
         dashboardSection.style.display = 'block';
         logoutBtn.style.display = 'inline-block';
-        loadBookings();
+        
+        loadBookingsTable();
+        initAdminCalendar(); // Запускаем календарь!
     }
 
-    // 5. ЗАГРУЖАЕМ ДАННЫЕ ИЗ БАЗЫ
-    async function loadBookings() {
+    // --- ЛОГИКА КАЛЕНДАРЯ АДМИНА ---
+    
+    function formatDate(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function initAdminCalendar() {
+        document.getElementById('adminHallSelect').addEventListener('change', renderAdminTimes);
+        
+        document.getElementById('adminPrevMonth').addEventListener('click', () => {
+            adminNavDate.setMonth(adminNavDate.getMonth() - 1);
+            renderAdminDates();
+        });
+        
+        document.getElementById('adminNextMonth').addEventListener('click', () => {
+            adminNavDate.setMonth(adminNavDate.getMonth() + 1);
+            renderAdminDates();
+        });
+        
+        renderAdminDates();
+    }
+
+    function renderAdminDates() {
+        const label = document.getElementById('adminMonthLabel');
+        label.textContent = `${months[adminNavDate.getMonth()]} ${adminNavDate.getFullYear()}`;
+        
+        const slider = document.getElementById('adminDateSlider');
+        slider.innerHTML = '';
+        
+        const year = adminNavDate.getFullYear();
+        const month = adminNavDate.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateObj = new Date(year, month, i);
+            const dateStr = formatDate(dateObj);
+            
+            const card = document.createElement('div');
+            card.className = `date-card ${dateStr === adminSelectedDateStr ? 'active' : ''}`;
+            card.innerHTML = `
+                <div class="day-name">${daysOfWeek[dateObj.getDay()]}</div>
+                <div class="day-number">${i}</div>
+            `;
+            
+            card.addEventListener('click', () => {
+                adminSelectedDateStr = dateStr;
+                renderAdminDates(); // Перерисовываем, чтобы сдвинуть класс active
+            });
+            
+            slider.appendChild(card);
+        }
+        renderAdminTimes(); // Рисуем часы для выбранного дня
+    }
+
+    async function renderAdminTimes() {
+        const grid = document.getElementById('adminTimeGrid');
+        grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #666;">Загрузка расписания...</div>';
+        
+        const selectedHall = document.getElementById('adminHallSelect').value;
+        
+        // Достаем брони из базы для этого зала и этой даты
+        const { data, error } = await supabaseClient
+            .from('booking')
+            .select('id, booking_times, is_confirmed')
+            .eq('hall_name', selectedHall)
+            .eq('booking_date', adminSelectedDateStr);
+
+        let bookedSlots = {}; // {'10:00': {status: 'pending', id: '...'}, ...}
+
+        if (data) {
+            data.forEach(booking => {
+                let times = booking.booking_times;
+                if (typeof times === 'string') {
+                    try { times = JSON.parse(times); } catch (e) { times = [times]; }
+                }
+                if (Array.isArray(times)) {
+                    times.forEach(t => {
+                        bookedSlots[t] = {
+                            is_confirmed: booking.is_confirmed,
+                            id: booking.id
+                        };
+                    });
+                }
+            });
+        }
+
+        grid.innerHTML = '';
+        
+        // Рисуем кнопки с 9:00 до 20:00
+        for (let h = 9; h <= 20; h++) {
+            const timeStr = `${h}:00`;
+            const btn = document.createElement('button');
+            btn.textContent = timeStr;
+            btn.className = 'time-btn ';
+
+            if (bookedSlots[timeStr]) {
+                const bookingInfo = bookedSlots[timeStr];
+                
+                if (bookingInfo.is_confirmed) {
+                    btn.className += 'status-confirmed';
+                    btn.title = 'Время занято';
+                } else {
+                    btn.className += 'status-pending';
+                    btn.title = 'Нажмите, чтобы подтвердить эту бронь';
+                    // Если админ кликает на желтую кнопку - сразу подтверждаем!
+                    btn.onclick = () => confirmBooking(bookingInfo.id);
+                }
+            } else {
+                btn.className += 'status-free';
+            }
+            
+            grid.appendChild(btn);
+        }
+    }
+
+    // --- ЛОГИКА ТАБЛИЦЫ ---
+    async function loadBookingsTable() {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Загрузка данных...</td></tr>';
 
-        // Берем все брони, сортируем от самых новых к старым
         const { data: bookings, error } = await supabaseClient
             .from('booking')
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">Ошибка загрузки: ${error.message}</td></tr>`;
-            return;
-        }
+        if (error) return;
 
-        if (bookings.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">Пока нет ни одного бронирования.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = ''; // Очищаем таблицу перед вставкой
-        // --- СЧИТАЕМ СТАТИСТИКУ ЗА ТЕКУЩИЙ МЕСЯЦ ---
+        tbody.innerHTML = ''; 
+        
         let totalRevenue = 0;
         let totalConfirmed = 0;
         const currentMonth = new Date().getMonth();
@@ -80,36 +183,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         bookings.forEach(b => {
             const bDate = new Date(b.booking_date);
-            // Считаем только подтвержденные брони текущего месяца и года
-            if (b.status === 'confirmed' && bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear) {
+            if (b.is_confirmed === true && bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear) {
                 totalRevenue += b.total_price;
                 totalConfirmed += 1;
             }
         });
 
-        // Выводим цифры на экран (с красивыми пробелами в тысячах)
         document.getElementById('monthlyRevenue').textContent = totalRevenue.toLocaleString('ru-RU') + ' ₽';
         document.getElementById('monthlyBookings').textContent = totalConfirmed;
-        // ------------------------------------------
 
         bookings.forEach(booking => {
             const tr = document.createElement('tr');
-            
-            // Красиво форматируем время (если это массив)
             const timeStr = Array.isArray(booking.booking_times) ? booking.booking_times.join(', ') : booking.booking_times;
             
-            // Оформляем статус
             let statusHtml = '';
             let confirmBtn = '';
             
-            if (booking.status === 'pending') {
+            if (!booking.is_confirmed) {
                 statusHtml = '<span style="color: #f39c12; font-weight: bold;">Ожидает</span>';
-                confirmBtn = `<button class="action-btn btn-confirm" onclick="updateStatus('${booking.id}', 'confirmed')" title="Подтвердить бронь">✓</button>`;
+                confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить бронь">✓</button>`;
             } else {
-                statusHtml = '<span style="color: #27ae60; font-weight: bold;">Подтверждено</span>';
+                statusHtml = '<span style="color: #e74c3c; font-weight: bold;">Подтверждено</span>';
             }
 
-            // Формируем строчку таблицы
             tr.innerHTML = `
                 <td><strong>${booking.booking_date}</strong><br><span style="color: #666; font-size: 0.9em;">${timeStr}</span></td>
                 <td><strong>${booking.hall_name}</strong><br><span style="color: #666; font-size: 0.9em;">${booking.total_price} ₽</span></td>
@@ -126,30 +222,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- ФУНКЦИИ УПРАВЛЕНИЯ БРОНЯМИ ---
-
-// Подтверждение брони
-window.updateStatus = async function(id, newStatus) {
-    if (confirm('Подтвердить это бронирование?')) {
+// Глобальные функции для кнопок в таблице и календаре
+window.confirmBooking = async function(id) {
+    if (confirm('Подтвердить это время? Оно закроется в календаре для всех клиентов.')) {
         const { error } = await supabaseClient
             .from('booking')
-            .update({ status: newStatus })
+            .update({ is_confirmed: true }) 
             .eq('id', id);
             
-        if (error) alert('Ошибка при обновлении: ' + error.message);
-        else location.reload(); // Обновляем страницу, чтобы увидеть изменения
+        if (error) alert('Ошибка: ' + error.message);
+        else location.reload(); 
     }
 };
 
-// Удаление брони
 window.deleteBooking = async function(id) {
-    if (confirm('Вы уверены, что хотите безвозвратно удалить это бронирование?')) {
+    if (confirm('Удалить эту бронь навсегда?')) {
         const { error } = await supabaseClient
             .from('booking')
             .delete()
             .eq('id', id);
             
-        if (error) alert('Ошибка при удалении: ' + error.message);
+        if (error) alert('Ошибка: ' + error.message);
         else location.reload();
     }
 };
