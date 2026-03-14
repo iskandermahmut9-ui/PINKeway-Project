@@ -1,5 +1,6 @@
 pyTelegramBotAPI
-supabase
+supabase==2.3.4
+httpx==0.25.2
 python-dotenv
 Flask
 gunicorn

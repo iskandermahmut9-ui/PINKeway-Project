@@ -59,13 +59,17 @@ def check_new_bookings():
         time.sleep(10)
 
 def run_bot():
-    bot.infinity_polling()
+    try:
+        bot.infinity_polling()
+    except Exception as e:
+        print("Ошибка запуска бота:", e)
 
+# --- ЗАПУСКАЕМ БОТА СРАЗУ (Чтобы Gunicorn его увидел) ---
+print("🤖 Запускаем фоновые потоки...")
+threading.Thread(target=check_new_bookings, daemon=True).start()
+threading.Thread(target=run_bot, daemon=True).start()
+
+# --- ЭТО НУЖНО ТОЛЬКО ДЛЯ ЛОКАЛЬНЫХ ТЕСТОВ ---
 if __name__ == '__main__':
-    # Запускаем проверку базы и самого бота в фоновых потоках
-    threading.Thread(target=check_new_bookings, daemon=True).start()
-    threading.Thread(target=run_bot, daemon=True).start()
-    
-    # Запускаем веб-сервер (обязательно для Render)
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
