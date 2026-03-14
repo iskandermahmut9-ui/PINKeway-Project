@@ -246,3 +246,34 @@ window.deleteBooking = async function(id) {
         else location.reload();
     }
 };
+// --- ФУНКЦИЯ ПРОКРУТКИ МЫШКОЙ (DRAG-TO-SCROLL) ---
+function initDragToScroll(sliderId) {
+    const slider = document.getElementById(sliderId);
+    if (!slider) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+    });
+    slider.addEventListener('mouseleave', () => { isDown = false; });
+    slider.addEventListener('mouseup', () => { isDown = false; });
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 2; // Скорость прокрутки
+        slider.scrollLeft = scrollLeft - walk;
+    });
+}
+
+// Запускаем прокрутку для админского календаря при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        initDragToScroll('adminDateSlider');
+    }, 500); // Небольшая задержка, чтобы элементы успели создаться
+});

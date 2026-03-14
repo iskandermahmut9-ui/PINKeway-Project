@@ -40,6 +40,26 @@
         .status-free { background-color: #f8f9fa; color: var(--dark); cursor: default; }
         .status-pending { background-color: #f39c12; color: white; border-color: #f39c12; cursor: pointer; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); }
         .status-confirmed { background-color: #e74c3c; color: white; border-color: #e74c3c; cursor: not-allowed; text-decoration: line-through; }
+    /* --- АДАПТАЦИЯ ДЛЯ ТЕЛЕФОНОВ И ПРОКРУТКА --- */
+        .date-slider { cursor: grab; }
+        .date-slider:active { cursor: grabbing; }
+
+        @media (max-width: 600px) {
+            .admin-container { margin: 10px auto; padding: 10px; }
+            .admin-calendar-box { padding: 15px; }
+            .stats-container { flex-direction: column; gap: 10px; } /* Блоки статистики друг под другом */
+            
+            /* Сужаем календарь */
+            .date-card { min-width: 65px; padding: 8px 4px; }
+            .date-card .day-number { font-size: 1.2em; }
+            
+            /* Сужаем сетку времени */
+            .time-grid { gap: 6px; }
+            .time-btn { padding: 10px 5px; font-size: 0.9em; }
+            
+            /* Таблица становится прокручиваемой по горизонтали */
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
     </style>
 </head>
 <body>
