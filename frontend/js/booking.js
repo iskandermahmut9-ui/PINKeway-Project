@@ -311,6 +311,25 @@ async function submitBooking() {
         finishBtn.textContent = 'Подтвердить';
         finishBtn.disabled = false;
     }
+    // --- НАЧАЛО БЛОКА БЛОКИРОВКИ ПРОШЕДШЕГО ВРЕМЕНИ ---
+    const now = new Date();
+    // Формируем сегодняшнюю дату в формате YYYY-MM-DD (как в базе)
+    const todayFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentHour = now.getHours();
+
+    // Если клиент выбрал СЕГОДНЯ, проверяем часы
+    if (currentDate === todayFormatted) {
+        for (let h = startHour; h <= endHour; h++) {
+            // Если час уже прошел (или идет прямо сейчас) - блокируем его
+            if (h <= currentHour) {
+                const pastTime = `${h}:00`;
+                if (!occupiedSlots.includes(pastTime)) {
+                    occupiedSlots.push(pastTime);
+                }
+            }
+        }
+    }
+    // --- КОНЕЦ БЛОКА ---
 }
 // --- СВАЙП ДЛЯ КАЛЕНДАРЯ МЫШКОЙ (DRAG-TO-SCROLL) ---
 const slider = document.getElementById('dateSlider');
