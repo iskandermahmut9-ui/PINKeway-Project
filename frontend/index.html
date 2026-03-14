@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PINKeway | Розовый Путь</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <a href="index.html" class="logo-link">
+            <img src="assets/design/Logo1.png" alt="PINKeway Logo" onerror="this.src='https://placehold.co/200x50/white/d880a6?text=PINKeway';">
+        </a>
+    </div>
+    <nav>
+        <a href="#halls">Залы</a>
+        <a href="#services">Услуги</a>
+        <a href="#rules">Правила</a>
+        <a href="#footer">Контакты</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-logo">
+        <img src="assets/design/logo-pink.png" alt="Розовый Путь">
+    </div>
+    <a href="booking.html" class="btn-gold">Забронировать зал</a>
+</section>
+
+<section id="halls" class="section section-bg">
+    <h2>Наши Залы</h2>
+    <div class="halls-grid">
+        
+        <div class="hall-card">
+            <div class="hall-image" onclick="openGallery('fortessa')" style="background-image: url('https://images.unsplash.com/photo-1598928506311-c95148c8ab1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-info">
+                <h3>Фортесса</h3>
+                <ul>
+                    <li>Циклорама угловая, стационарная</li>
+                    <li>Площадь: 18 м²</li>
+                    <li>Вместимость: до 30 человек</li>
+                </ul>
+                <div class="price-and-btn">
+                    <div class="price">1700 ₽ / 55 минут</div>
+                    <a href="booking.html?hall=fortessa" class="book-btn">Выбрать время</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="hall-card">
+            <div class="hall-image" onclick="openGallery('black_royal')" style="background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-info">
+                <h3>Black Royal</h3>
+                <ul>
+                    <li>Площадь: 23 м²</li>
+                    <li>Вместимость: до 40 человек</li>
+                    <li>Идеально подойдет для роскошных кадров с всевозможными вариантами атрибутики</li>
+                </ul>
+                <div class="price-and-btn">
+                    <div class="price">1700 ₽ / 55 минут</div>
+                    <a href="booking.html?hall=black_royal" class="book-btn">Выбрать время</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="hall-card">
+            <div class="hall-image" onclick="openGallery('respecta')" style="background-image: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-info">
+                <h3>Респекта</h3>
+                <ul>
+                    <li>Площадь: 23 м²</li>
+                    <li>Вместимость: до 40 человек</li>
+                    <li>Постоянно меняющийся зал в зависимости от сезонности и праздников</li>
+                </ul>
+                <div class="price-and-btn">
+                    <div class="price">1700 ₽ / 55 минут</div>
+                    <a href="booking.html?hall=respecta" class="book-btn">Выбрать время</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="hall-card">
+            <div class="hall-image" onclick="openGallery('atlantis')" style="background-image: url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-info">
+                <h3>Атлантис</h3>
+                <ul>
+                    <li>Площадь: 10 м²</li>
+                    <li>Вместимость: до 3 человек</li>
+                    <li>Уникальная возможность контента под тропическим душем</li>
+                </ul>
+                <div class="price-and-btn">
+                    <div class="price">1700 ₽ / 30 минут</div>
+                    <a href="booking.html?hall=atlantis" class="book-btn">Выбрать время</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="hall-card">
+            <div class="hall-image" onclick="openGallery('aqualia')" style="background-image: url('https://images.unsplash.com/photo-1507652313519-d4e9174996dd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-info">
+                <h3>Аквалия</h3>
+                <ul>
+                    <li>Площадь: 12 м²</li>
+                    <li>Вместимость: до 3 человек</li>
+                    <li>Съемка в ванной. Ванна может быть наполнена (вода, шампанское, молоко, цветы)</li>
+                </ul>
+                <div class="price-and-btn">
+                    <div class="price">от 1700 ₽ / 55 минут</div>
+                    <a href="booking.html?hall=aqualia" class="book-btn">Выбрать время</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="hall-card">
+            <div class="hall-image" onclick="openGallery('cream')" style="background-image: url('https://images.unsplash.com/photo-1554995207-c18c203602cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-info">
+                <h3>Крем</h3>
+                <ul>
+                    <li>Площадь: 12 м²</li>
+                    <li>Вместимость: до 2 человек</li>
+                    <li>Самые уютные, теплые и вкусные снимки, словно у вас дома</li>
+                </ul>
+                <div class="price-and-btn">
+                    <div class="price">1700 ₽ / 55 минут</div>
+                    <a href="booking.html?hall=cream" class="book-btn">Выбрать время</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<section id="services" class="section">
+    <h2>Дополнительные услуги</h2>
+    <div class="services-grid">
+        <div class="service-card">Аренда рабочих мест для мастеров: визажист, стилист по волосам, бровист</div>
+        <div class="service-card">Коворкинг для мастеров (аренда рабочего стола + свет)</div>
+        <div class="service-card">Прокат и аренда платьев, костюмов, аксессуаров</div>
+    </div>
+    <div class="info-text">
+        <p><strong>Время работы:</strong> с 9:00 до 21:00</p>
+        <p class="warning-text">ВНИМАНИЕ❕ При аренде дополнительного зала, входящего в этот час, любой другой зал - 500 руб.</p>
+        <p><em>Примечание: аренда зала Крем обговаривается заранее.</em></p>
+    </div>
+</section>
+
+<section id="rules" class="section section-bg">
+    <h2>Правила бронирования залов</h2>
+    <div class="rules-card">
+        <ul>
+            <li>100% оплата. Возможен возврат брони, если отмена производится минимум за 24 часа до съемок.</li>
+            <li>Одновременно на локации может находиться до 5 человек. За каждого последующего оплата 100₽ час.</li>
+            <li>Время съемки 55 минут. Приходить можно не раньше, чем за 15 минут.</li>
+            <li>Для зала АТЛАНТИС и АКВАЛИЯ необходимо взять с собой полотенце.</li>
+            <li>Обувь для съемки необходимо очистить заблаговременно.</li>
+            <li>Групповая съемка от 15 человек — 3.000₽ 55 минут.</li>
+        </ul>
+    </div>
+</section>
+
+<section class="section">
+    <h2 style="color: #e74c3c;">ЗАПРЕЩАЕТСЯ</h2>
+    <div class="rules-card" style="border-left: 5px solid #e74c3c;">
+        <ul>
+            <li>Порча имущества студии. Штраф от 100.000 т.р.</li>
+            <li>Переносить крупногабаритный реквизит всех залов без разрешения администрации студии.</li>
+            <li>Курение на территории студии.</li>
+            <li>Оставлять маленьких детей без присмотра взрослых.</li>
+        </ul>
+    </div>
+</section>
+
+<footer id="footer">
+    <a href="tel:+79183577778">+7 918 357 77 78</a>
+    <a href="https://t.me/YOUR_MAX_LINK" class="btn-max" target="_blank">MAX</a>
+</footer>
+
+<div id="galleryModal" class="modal">
+    <span class="close-modal" onclick="closeGallery()">&times;</span>
+    <span class="modal-nav" id="modal-prev" onclick="changeImage(-1)">&#10094;</span>
+    <img class="modal-content" id="modalImage">
+    <span class="modal-nav" id="modal-next" onclick="changeImage(1)">&#10095;</span>
+</div>
+
+<script>
+    // Простая логика карусели для залов
+    const galleries = {
+        'fortessa': ['https://images.unsplash.com/photo-1598928506311-c95148c8ab1a?w=800', 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?w=800'],
+        'black_royal': ['https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800'],
+        'respecta': ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800'],
+        'atlantis': ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800'],
+        'aqualia': ['https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800'],
+        'cream': ['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']
+    };
+
+    let currentGallery = [];
+    let currentIndex = 0;
+
+    function openGallery(hallId) {
+        currentGallery = galleries[hallId] || [];
+        if (currentGallery.length > 0) {
+            currentIndex = 0;
+            document.getElementById('modalImage').src = currentGallery[currentIndex];
+            document.getElementById('galleryModal').style.display = 'flex';
+        }
+    }
+
+    function closeGallery() {
+        document.getElementById('galleryModal').style.display = 'none';
+    }
+
+    function changeImage(direction) {
+        currentIndex += direction;
+        if (currentIndex < 0) currentIndex = currentGallery.length - 1;
+        if (currentIndex >= currentGallery.length) currentIndex = 0;
+        document.getElementById('modalImage').src = currentGallery[currentIndex];
+    }
+</script>
+
+</body>
+</html>

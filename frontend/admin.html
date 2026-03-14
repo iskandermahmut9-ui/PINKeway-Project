@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления | PINKeway</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { background-color: #f4f4f9; }
+        .admin-container { max-width: 1000px; margin: 50px auto; padding: 20px; }
+        
+        /* Стили для формы входа */
+        #loginSection { background: var(--white); padding: 40px; border-radius: 15px; max-width: 400px; margin: 100px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        #loginSection input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--gray); border-radius: 8px; box-sizing: border-box; }
+        
+        /* Стили для таблицы броней (изначально скрыта) */
+        #dashboardSection { display: none; background: var(--white); padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--gray); }
+        th { background-color: var(--light-pink); color: var(--pink); }
+        .status-pending { color: #f39c12; font-weight: bold; }
+        .status-paid { color: #27ae60; font-weight: bold; }
+        
+        .action-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; margin-right: 5px; }
+        .btn-confirm { background-color: #27ae60; }
+        .btn-delete { background-color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <h2 class="logo-text">PINK<strong>EWAY</strong> <span style="font-size: 0.5em; color: #666;">/ ADMIN</span></h2>
+    </div>
+    <nav>
+        <a href="#" id="logoutBtn" style="display: none; color: #e74c3c;">Выйти</a>
+    </nav>
+</header>
+
+<div class="admin-container">
+    
+    <div id="loginSection">
+        <h2 style="color: var(--pink); margin-bottom: 20px;">Вход для администратора</h2>
+        <input type="email" id="adminEmail" placeholder="Email" required>
+        <input type="password" id="adminPassword" placeholder="Пароль" required>
+        <button id="loginBtn" class="btn-gold" style="width: 100%; padding: 12px;">Войти</button>
+        <p id="loginError" style="color: red; display: none; margin-top: 10px;">Неверный логин или пароль</p>
+    </div>
+
+    <div id="dashboardSection">
+        <h2>Последние бронирования</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата / Время</th>
+                    <th>Зал</th>
+                    <th>Клиент</th>
+                    <th>Контакты</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="bookingsTableBody">
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #666;">Загрузка данных...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/admin.js"></script>
+
+</body>
+</html>

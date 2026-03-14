@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бронирование | PINKeway</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .wizard-container { max-width: 600px; margin: 40px auto; background: var(--white); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); overflow: hidden; min-height: 500px; position: relative; }
+        .step-indicator { display: flex; justify-content: space-between; padding: 20px 30px; background-color: var(--light-pink); border-bottom: 1px solid rgba(216, 128, 166, 0.2); }
+        .step-dot { flex: 1; text-align: center; font-size: 0.85em; font-weight: 600; color: #aaa; position: relative; }
+        .step-dot.active { color: var(--pink); }
+        .step-dot.completed { color: var(--gold); }
+        .step-content { padding: 30px; display: none; animation: fadeIn 0.4s ease; }
+        .step-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h2.step-title { margin-top: 0; color: var(--dark); font-size: 1.5em; margin-bottom: 20px; }
+
+        /* Залы с мини-картинками */
+        .hall-list { display: flex; flex-direction: column; gap: 15px; }
+        .hall-item { display: flex; align-items: center; padding: 10px 15px; border: 1px solid var(--gray); border-radius: 12px; cursor: pointer; transition: 0.2s; }
+        .hall-item:hover { border-color: var(--pink); background-color: var(--light-pink); }
+        .hall-thumb { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-right: 15px; background-color: #eee; }
+        .hall-info-mini { flex-grow: 1; }
+        .hall-info-mini h4 { margin: 0 0 5px 0; font-size: 1.1em; color: var(--dark); }
+        .hall-info-mini p { margin: 0; font-size: 0.85em; color: #666; }
+        .hall-price { font-weight: bold; color: var(--gold); white-space: nowrap; margin-left: 10px; }
+
+        /* --- НАВИГАЦИЯ ПО МЕСЯЦАМ --- */
+        .month-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background-color: var(--light-pink); border-radius: 12px; padding: 5px 10px; }
+        .month-btn { background: var(--white); border: 1px solid var(--pink); color: var(--pink); font-size: 1.2em; font-weight: bold; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .month-btn:hover:not(:disabled) { background-color: var(--pink); color: var(--white); }
+        .month-btn:disabled { border-color: #ccc; color: #ccc; cursor: not-allowed; background: none; }
+        .month-label { font-weight: 600; font-size: 1.1em; color: var(--dark); text-transform: uppercase; }
+
+        /* Календарь и время */
+       .date-slider { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; scrollbar-width: none; cursor: grab; }
+        .date-slider:active { cursor: grabbing; }
+        .date-card { min-width: 80px; padding: 10px 5px; text-align: center; border: 1px solid var(--gray); border-radius: 12px; cursor: pointer; transition: 0.2s; }
+        .date-card.active { background-color: var(--pink); color: var(--white); border-color: var(--pink); }
+        .date-card .day-name { font-size: 0.75em; text-transform: uppercase; margin-bottom: 5px; opacity: 0.9; font-weight: 600; letter-spacing: 0.5px; }
+        .date-card .day-number { font-size: 1.4em; font-weight: bold; }
+        
+        .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .time-btn { padding: 12px; border: 1px solid var(--gray); border-radius: 8px; background: none; font-size: 1em; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        .time-btn:hover:not(:disabled) { border-color: var(--pink); color: var(--pink); }
+        .time-btn.active { background-color: var(--pink); color: var(--white); border-color: var(--pink); }
+        .time-btn:disabled { background-color: #f0f0f0; color: #aaa; cursor: not-allowed; text-decoration: line-through; border-color: #eee; }
+
+        /* Форма и кнопки */
+        .input-field { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid var(--gray); border-radius: 10px; font-size: 1em; font-family: inherit; box-sizing: border-box; outline: none; }
+        .input-field:focus { border-color: var(--pink); }
+        
+        .bottom-nav { display: flex; justify-content: space-between; margin-top: 30px; gap: 10px; }
+        /* Кнопки теперь в едином стиле */
+        .btn-action { flex: 1; padding: 12px; border-radius: 30px; font-size: 1em; font-weight: bold; cursor: pointer; font-family: inherit; transition: 0.2s; border: none; text-align: center; }
+        .btn-back { background-color: #e0e0e0; color: var(--dark); }
+        .btn-back:hover { background-color: #ccc; }
+        .btn-next { background-color: var(--gold); color: white; }
+        .btn-next:hover:not(:disabled) { background-color: #b5952f; transform: translateY(-2px); }
+        .btn-next:disabled { background-color: #ccc; cursor: not-allowed; transform: none; color: #888; }
+        
+        .summary-box { background: var(--light-pink); padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <a href="index.html" class="logo-link">
+            <img src="assets/design/Logo1.png" alt="PINKeway Logo" onerror="this.src='https://placehold.co/200x50/white/d880a6?text=PINKeway';">
+        </a>
+    </div>
+</header>
+
+<div class="wizard-container">
+    <div class="step-indicator">
+        <div class="step-dot active" id="dot-1">1. Зал</div>
+        <div class="step-dot" id="dot-2">2. Дата и Время</div>
+        <div class="step-dot" id="dot-3">3. Детали</div>
+    </div>
+
+    <div class="step-content active" id="step-1">
+        <h2 class="step-title">Выберите зал</h2>
+        <div class="hall-list">
+            <div class="hall-item" data-hall="fortessa" data-name="Фортесса" data-price="1700">
+                <img src="https://images.unsplash.com/photo-1598928506311-c95148c8ab1a?w=100" class="hall-thumb" alt="Фортесса">
+                <div class="hall-info-mini"><h4>Фортесса</h4><p>18 м² • До 30 чел</p></div>
+                <div class="hall-price">1700 ₽</div>
+            </div>
+            <div class="hall-item" data-hall="black_royal" data-name="Black Royal" data-price="1700">
+                <img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=100" class="hall-thumb" alt="Black Royal">
+                <div class="hall-info-mini"><h4>Black Royal</h4><p>23 м² • До 40 чел</p></div>
+                <div class="hall-price">1700 ₽</div>
+            </div>
+            <div class="hall-item" data-hall="respecta" data-name="Респекта" data-price="1700">
+                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=100" class="hall-thumb" alt="Респекта">
+                <div class="hall-info-mini"><h4>Респекта</h4><p>23 м² • До 40 чел</p></div>
+                <div class="hall-price">1700 ₽</div>
+            </div>
+            <div class="hall-item" data-hall="atlantis" data-name="Атлантис" data-price="1700">
+                <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=100" class="hall-thumb" alt="Атлантис">
+                <div class="hall-info-mini"><h4>Атлантис</h4><p>10 м² • До 3 чел</p></div>
+                <div class="hall-price">1700 ₽</div>
+            </div>
+            <div class="hall-item" data-hall="aqualia" data-name="Аквалия" data-price="1700">
+                <img src="https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=100" class="hall-thumb" alt="Аквалия">
+                <div class="hall-info-mini"><h4>Аквалия</h4><p>12 м² • До 3 чел</p></div>
+                <div class="hall-price">от 1700 ₽</div>
+            </div>
+            <div class="hall-item" data-hall="cream" data-name="Крем" data-price="1700">
+                <img src="https://images.unsplash.com/photo-1554995207-c18c203602cb?w=100" class="hall-thumb" alt="Крем">
+                <div class="hall-info-mini"><h4>Крем</h4><p>12 м² • До 2 чел</p></div>
+                <div class="hall-price">1700 ₽</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="step-content" id="step-2">
+        <h2 class="step-title">Выберите время</h2>
+        <div id="selectedHallDisplay" class="selected-hall-banner">Выбранный зал: <strong>...</strong></div>
+
+        <h4 style="margin-bottom: 10px; color: #666; font-weight: normal; font-size: 0.9em;">ДАТА</h4>
+        
+        <div class="month-selector">
+            <button class="month-btn" id="prevMonthBtn" onclick="changeMonth(-1)">&lt;</button>
+            <div class="month-label" id="currentMonthLabel">Октябрь 2023</div>
+            <button class="month-btn" id="nextMonthBtn" onclick="changeMonth(1)">&gt;</button>
+        </div>
+        <div class="date-slider" id="dateSlider"></div>
+
+        <h4 style="margin-top: 25px; margin-bottom: 10px; color: #666; font-weight: normal; font-size: 0.9em;">ВРЕМЯ (можно выбрать несколько часов)</h4>
+        <div class="time-grid" id="timeGrid"></div>
+
+        <div class="bottom-nav">
+            <button class="btn-action btn-back" onclick="goToStep(1)">Назад</button>
+            <button class="btn-action btn-next" id="btn-to-step-3" onclick="goToStep(3)" disabled>Продолжить</button>
+        </div>
+    </div>
+
+    <div class="step-content" id="step-3">
+        <h2 class="step-title">Ваши данные</h2>
+        <div class="summary-box" id="bookingSummary"></div>
+        <input type="text" id="clientName" class="input-field" placeholder="Имя и Фамилия" required>
+        <input type="tel" id="clientPhone" class="input-field" placeholder="+7 (999) 000-00-00" required>
+        <input type="text" id="clientTg" class="input-field" placeholder="Ник в Telegram (например @anna)">
+        <div class="bottom-nav">
+            <button class="btn-action btn-back" onclick="goToStep(2)">Назад</button>
+            <button class="btn-action btn-next" id="btn-finish" onclick="submitBooking()">Подтвердить</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase-client.js"></script>
+
+<script src="js/booking.js"></script>
+
+</body>
+</html>

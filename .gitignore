@@ -1,0 +1,13 @@
+# Секретные ключи и переменные окружения
+.env
+
+# Системные файлы Python (для будущего бота)
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Системные файлы macOS/Windows
+.DS_Store
+Thumbs.db
