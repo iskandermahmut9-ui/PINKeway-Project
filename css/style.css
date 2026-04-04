@@ -151,9 +151,47 @@ nav a:hover { color: var(--pink); }
 .rules-card li { margin-bottom: 10px; }
 
 /* --- ФУТЕР --- */
-/* --- КНОПКА MAX В ФУТЕРЕ --- */
-.btn-max { background-color: #000; color: #fff; border: 2px solid #fff; padding: 10px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; transition: 0.3s; }
-.btn-max:hover { background-color: #fff; color: #000; }
+/* --- НОВАЯ КРАСИВАЯ КНОПКА MAX С КАРТИНКОЙ --- */
+.btn-max { 
+    /* Превращаем ссылку в гибкий контейнер, чтобы центрировать картинку */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    background-color: #000; /* Черный фон */
+    border: 2px solid #fff;  /* Белая рамка */
+    
+    /* Устанавливаем точные размеры, чтобы кнопка сохраняла форму */
+    width: 130px;   /* Ширина кнопки */
+    height: 40px;   /* Высота кнопки */
+    border-radius: 30px; /* Закругление */
+    
+    text-decoration: none; 
+    transition: 0.3s; /* Плавность */
+    overflow: hidden; /* Чтобы картинка не вылезала за рамки */
+    padding: 0; /* Убираем отступы, теперь размер задан жестко */
+}
+
+/* Эффект наведения на всю кнопку */
+.btn-max:hover { 
+    background-color: #fff; /* Фон становится белым */
+    border-color: #000;      /* Рамка становится черной */
+}
+
+/* Стили для картинки внутри кнопки */
+.btn-max-img {
+    height: 20px; /* Устанавливаем аккуратную высоту лого */
+    width: auto;  /* Ширина подстраивается автоматически */
+    object-fit: contain; /* Картинка не сплющится */
+    transition: filter 0.3s; /* Плавность для смены цветов лого */
+}
+
+/* --- МАГИЯ: НА ХОВЕР МЕНЯЕМ ЦВЕТА КАРТИНКИ --- */
+/* Проблема: Белое лого на белом фоне исчезнет.
+   Решение: filter: invert(1) превращает белое в черное! */
+.btn-max:hover .btn-max-img {
+    filter: invert(1); 
+}
 /* --- СТИЛИ ДЛЯ ПОДВАЛА (FOOTER) --- */
 #footer {
     background-color: #2b2b2b; /* Темный фон подвала */
