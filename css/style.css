@@ -83,7 +83,7 @@ nav a:hover { color: var(--pink); }
 @media (max-width: 768px) {
     .hero {
         /* Сдвигаем фокус на 20% от левого края */
-        background-position: 670% center; 
+        background-position: 67% center; 
     }
 }
 
