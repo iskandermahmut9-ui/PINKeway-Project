@@ -150,37 +150,37 @@ function generateDates() {
 
 async function generateTimeSlots() {
     const grid = document.getElementById('timeGrid');
-    grid.innerHTML = '';
     
-    // Время работы: с 9:00 до 21:00 (последний слот начнется в 20:00)
+    // Показываем загрузку, пока ждем ответ от базы
+    grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #666; padding: 20px;">Проверяем свободное время...</div>';
+    
     const startHour = 9;
     const endHour = 20;
-    
-    // --- НАЧАЛО НОВОГО БЛОКА: Получаем реальные данные из базы ---
-    let occupiedSlots = []; // Теперь это пустой список, который мы заполним из базы
+    let occupiedSlots = [];
 
-    // ❗️ ВАЖНО: Проверьте, как у вас в коде называются переменные выбранного зала и даты.
-    // Я использую bookingData, но если у вас иначе - поправьте эти две строчки:
-    const currentHall = bookingData.hallName; // например, 'Атлантис'
-    const currentDate = bookingData.bookingDate; // например, '2026-03-14'
+    // 1. Берем текущие зал и дату
+    // ВАЖНО: Убедитесь, что в вашем коде переменные называются именно так
+    const currentHall = bookingData.hallName; 
+    const currentDate = bookingData.bookingDate; 
 
+    // --- ЗАПРОС К БАЗЕ ДАННЫХ ---
     if (currentHall && currentDate) {
         try {
-            // Ищем в базе брони: нужный зал + нужная дата + статус "Подтверждено"
-            const { data, error } = await _supabase
+            const { data, error } = await supabaseClient
                 .from('booking')
                 .select('booking_times')
                 .eq('hall_name', currentHall)
                 .eq('booking_date', currentDate)
-                .eq('is_confirmed', true);
+                .eq('is_confirmed', true); // Ищем только подтвержденные!
 
-            if (error) throw error;
+            if (error) {
+                console.error('Ошибка при загрузке слотов:', error);
+            }
 
-            // Если база вернула занятые часы, аккуратно складываем их в наш список
             if (data) {
                 data.forEach(booking => {
-                    // booking.booking_times может быть массивом ['10:00', '11:00'] или строкой
                     let times = booking.booking_times;
+                    // Распаковываем часы, если они в виде строки
                     if (typeof times === 'string') {
                         try { times = JSON.parse(times); } catch (e) { times = [times]; }
                     }
@@ -190,8 +190,53 @@ async function generateTimeSlots() {
                 });
             }
         } catch (err) {
-            console.error('Ошибка при проверке занятых слотов:', err);
+            console.error('Критическая ошибка:', err);
         }
+    }
+
+    // --- БЛОКИРОВКА ПРОШЕДШЕГО ВРЕМЕНИ ДЛЯ СЕГОДНЯ ---
+    const now = new Date();
+    // Форматируем сегодняшнюю дату строго как в базе (YYYY-MM-DD)
+    const todayFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentHour = now.getHours();
+
+    if (currentDate === todayFormatted) {
+        for (let h = startHour; h <= endHour; h++) {
+            if (h <= currentHour) {
+                const pastTime = `${h}:00`;
+                if (!occupiedSlots.includes(pastTime)) {
+                    occupiedSlots.push(pastTime);
+                }
+            }
+        }
+    }
+
+    // --- ОТРИСОВКА КНОПОК ---
+    grid.innerHTML = '';
+    
+    for (let h = startHour; h <= endHour; h++) {
+        const timeStr = `${h}:00`;
+        const btn = document.createElement('button');
+        
+        btn.type = 'button'; 
+        btn.className = 'time-btn';
+        btn.textContent = timeStr;
+
+        // ПРОВЕРКА: Если время есть в списке занятых - блокируем
+        if (occupiedSlots.includes(timeStr)) {
+            btn.disabled = true;
+            btn.title = 'Это время уже забронировано';
+        } else {
+            // Если свободно - разрешаем кликать (убедитесь, что у вас есть функция toggleTimeSlot)
+            btn.onclick = () => toggleTimeSlot(timeStr, btn); 
+        }
+
+        // Если клиент уже выбрал это время до перелистывания дат - оставляем его активным
+        if (bookingData.bookingTimes && bookingData.bookingTimes.includes(timeStr)) {
+            btn.classList.add('active');
+        }
+
+        grid.appendChild(btn);
     }
     // --- КОНЕЦ НОВОГО БЛОКА ---
 

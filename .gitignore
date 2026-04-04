@@ -11,3 +11,5 @@ env/
 # Системные файлы macOS/Windows
 .DS_Store
 Thumbs.db
+.env
+__pycache__/
