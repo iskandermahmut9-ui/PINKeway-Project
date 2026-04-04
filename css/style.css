@@ -82,9 +82,8 @@ nav a:hover { color: var(--pink); }
 /* --- МАГИЯ ДЛЯ ТЕЛЕФОНОВ --- */
 @media (max-width: 768px) {
     .hero {
-        /* Если ваша модель стоит СПРАВА, оставляем right center */
-        /* Если модель СЛЕВА, поменяйте слово right на left */
-        background-position: right center; 
+        /* Сдвигаем фокус на 20% от левого края */
+        background-position: 60% center; 
     }
 }
 
