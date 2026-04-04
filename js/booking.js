@@ -252,6 +252,12 @@ async function submitBooking() {
     const name = document.getElementById('clientName').value;
     const phone = document.getElementById('clientPhone').value;
     const tg = document.getElementById('clientTg').value || 'Не указан';
+    // Проверка галочки согласия
+    const legalCheckbox = document.getElementById('legalCheckbox');
+    if (legalCheckbox && !legalCheckbox.checked) {
+        alert('Для бронирования необходимо дать согласие на обработку персональных данных и принять условия оферты.');
+        return;
+    }
     
     if (!name || !phone) {
         alert('Пожалуйста, введите имя и телефон');

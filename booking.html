@@ -145,6 +145,14 @@
         <input type="text" id="clientName" class="input-field" placeholder="Имя и Фамилия" required>
         <input type="tel" id="clientPhone" class="input-field" placeholder="+7 (999) 000-00-00" required>
         <input type="text" id="clientTg" class="input-field" placeholder="Ник в Telegram (например @anna)">
+        <div class="legal-consent" style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; font-size: 0.85em; color: #666; text-align: left;">
+            <input type="checkbox" id="legalCheckbox" style="margin-top: 4px; accent-color: var(--pink); cursor: pointer;" checked>
+            <label for="legalCheckbox" style="cursor: pointer; line-height: 1.4;">
+                Я согласен с <a href="docs/policy.html" target="_blank" style="color: var(--pink);">политикой конфиденциальности</a>, 
+                <a href="docs/offer.html" target="_blank" style="color: var(--pink);">договором оферты</a> и даю согласие на 
+                <a href="docs/consent.html" target="_blank" style="color: var(--pink);">обработку персональных данных</a>.
+            </label>
+        </div>
         <div class="bottom-nav">
             <button class="btn-action btn-back" onclick="goToStep(2)">Назад</button>
             <button class="btn-action btn-next" id="btn-finish" onclick="submitBooking()">Подтвердить</button>
