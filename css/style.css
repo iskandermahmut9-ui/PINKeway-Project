@@ -45,18 +45,47 @@ nav a { text-decoration: none; color: var(--dark); font-weight: 600; transition:
 nav a:hover { color: var(--pink); }
 
 /* --- ГЛАВНАЯ СТРАНИЦА --- */
+/* --- ГЛАВНЫЙ ЭКРАН (HERO) --- */
 .hero {
-    /* Фоновая картинка с затемнением */
-    background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url('https://images.unsplash.com/photo-1600607688969-a5bfcd646154?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover;
-    height: 100vh; /* Ровно на весь экран */
+    position: relative;
+    height: 100vh; /* Занимает 100% высоты экрана при открытии */
+    min-height: 600px; /* Защита, чтобы блок не сплющился */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 20px;
-    margin-top: -80px; /* Компенсация высоты шапки, чтобы не было скролла */
-    padding-top: 80px;
+    
+    /* СЮДА ВСТАВЬТЕ НАЗВАНИЕ ВАШЕЙ КАРТИНКИ */
+    background-image: url('../assets/design/hero-image.jpg'); 
+    
+    background-size: cover; /* Картинка всегда заполняет экран без пустот */
+    background-position: center center; /* На ПК смотрим ровно в центр */
+    background-repeat: no-repeat;
+}
+
+/* Накладываем элегантное затемнение (40%), чтобы логотип и кнопка не сливались с фоном */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4); 
+    z-index: 1;
+}
+
+/* Поднимаем кнопку и логотип над затемнением */
+.hero-logo, .hero .btn-gold {
+    position: relative;
+    z-index: 2;
+}
+
+/* --- МАГИЯ ДЛЯ ТЕЛЕФОНОВ --- */
+@media (max-width: 768px) {
+    .hero {
+        /* Если ваша модель стоит СПРАВА, оставляем right center */
+        /* Если модель СЛЕВА, поменяйте слово right на left */
+        background-position: right center; 
+    }
 }
 
 .hero-logo { max-width: 80%; width: 500px; margin-bottom: 30px; }
