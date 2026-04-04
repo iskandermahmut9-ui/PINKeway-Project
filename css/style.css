@@ -123,11 +123,96 @@ nav a:hover { color: var(--pink); }
 .rules-card li { margin-bottom: 10px; }
 
 /* --- ФУТЕР --- */
-footer { background-color: var(--dark); color: var(--white); padding: 40px 20px; text-align: center; }
-footer a { color: var(--white); text-decoration: none; font-size: 1.5em; font-weight: bold; display: block; margin-bottom: 20px; }
+/* --- КНОПКА MAX В ФУТЕРЕ --- */
 .btn-max { background-color: #000; color: #fff; border: 2px solid #fff; padding: 10px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; transition: 0.3s; }
 .btn-max:hover { background-color: #fff; color: #000; }
+/* --- СТИЛИ ДЛЯ ПОДВАЛА (FOOTER) --- */
+#footer {
+    background-color: #2b2b2b; /* Темный фон подвала */
+    padding: 50px 20px 20px;
+    color: #999;
+}
 
+.footer-content {
+    display: flex;
+    justify-content: space-between; /* Раскидываем колонки по краям */
+    align-items: flex-start;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 30px;
+}
+
+.footer-col {
+    flex: 1;
+    min-width: 250px; /* Чтобы на мобилках колонки не сжимались, а падали вниз */
+}
+
+/* Левая колонка (Реквизиты) */
+.footer-requisites {
+    text-align: left;
+    font-size: 0.85em;
+    line-height: 1.6;
+}
+.footer-requisites strong { color: #fff; }
+
+/* Центральная колонка (Документы) */
+.footer-legal-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9em;
+}
+.footer-legal-links a { color: var(--pink); text-decoration: none; transition: 0.2s; }
+.footer-legal-links a:hover { color: #fff; }
+
+/* Правая колонка (Контакты) */
+.footer-contacts {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Прижимаем к правому краю */
+    gap: 15px;
+}
+.footer-phone {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #ffffff; /* Делаем телефон белым! */
+    text-decoration: none;
+    transition: 0.2s;
+}
+.footer-phone:hover { color: var(--pink); }
+
+/* Копирайт */
+.footer-copyright {
+    text-align: center;
+    margin-top: 50px;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.85em;
+    color: #666;
+    line-height: 1.8;
+}
+.author-link {
+    color: var(--pink);
+    font-weight: 800;
+    text-decoration: none;
+    font-size: 1.1em;
+    letter-spacing: 1px;
+}
+
+/* Адаптация для мобильных телефонов */
+@media (max-width: 768px) {
+    .footer-content { 
+        flex-direction: column; 
+        align-items: center; 
+        text-align: center; 
+    }
+    .footer-requisites, .footer-contacts { 
+        text-align: center; 
+        align-items: center; 
+    }
+}
 /* --- МОДАЛЬНОЕ ОКНО ДЛЯ ФОТО --- */
 .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
 .modal-content { max-width: 90%; max-height: 80vh; border-radius: 10px; }
