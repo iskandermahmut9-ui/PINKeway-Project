@@ -6,7 +6,7 @@ let bookingData = {
     basePrice: 0,
     totalPrice: 0,
     date: null,
-    selectedTimes: [], // Теперь это массив для нескольких часов
+    selectedTimes: [], 
     clientName: null,
     clientPhone: null,
     clientTg: null
@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const preselectedHall = urlParams.get('hall');
 
     if (preselectedHall) {
-        // Ищем карточку с этим залом
         const hallItem = document.querySelector(`.hall-item[data-hall="${preselectedHall}"]`);
         if (hallItem) {
             selectHall(hallItem);
@@ -45,7 +44,6 @@ function selectHall(element) {
     bookingData.hallName = element.dataset.name;
     bookingData.basePrice = parseInt(element.dataset.price);
     
-    // НОВАЯ СТРОЧКА: Подставляем имя зала в плашку на втором шаге
     document.getElementById('selectedHallDisplay').innerHTML = `Зал: <strong>${bookingData.hallName}</strong>`;
     
     goToStep(2);
@@ -60,11 +58,9 @@ document.querySelectorAll('.hall-item').forEach(item => {
 const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
-// Переменная для отслеживания текущего открытого месяца в календаре
 let currentNavMonth = new Date();
-currentNavMonth.setDate(1); // Ставим 1 число, чтобы не перепрыгнуть через короткие месяцы
+currentNavMonth.setDate(1); 
 
-// Функция для кнопок "Вперед/Назад" по месяцам
 function changeMonth(offset) {
     currentNavMonth.setMonth(currentNavMonth.getMonth() + offset);
     generateDates();
@@ -80,33 +76,26 @@ function generateDates() {
     const year = currentNavMonth.getFullYear();
     const month = currentNavMonth.getMonth();
     
-    // Обновляем заголовок (например: "Ноябрь 2023")
     monthLabel.textContent = `${months[month]} ${year}`;
 
-    // Настоящие Сегодня и Завтра для проверок
     const today = new Date();
     today.setHours(0,0,0,0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Блокируем кнопку "Назад", если мы смотрим текущий месяц (чтобы не бронировали в прошлом)
     if (year === today.getFullYear() && month === today.getMonth()) {
         prevBtn.disabled = true;
     } else {
         prevBtn.disabled = false;
     }
 
-    // Узнаем, сколько дней в выбранном месяце
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Генерируем карточки дней
     for (let i = 1; i <= daysInMonth; i++) {
         let d = new Date(year, month, i);
         
-        // Пропускаем дни, которые уже прошли
         if (d < today) continue;
         
-        // Формируем правильную строку даты (YYYY-MM-DD)
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
@@ -119,7 +108,6 @@ function generateDates() {
         const dateCard = document.createElement('div');
         dateCard.className = 'date-card';
         
-        // Выделяем день, если он был выбран, или выделяем "Сегодня" по умолчанию
         if (bookingData.date === fullDateString) {
             dateCard.classList.add('active');
         } else if (!bookingData.date && d.getTime() === today.getTime()) {
@@ -129,13 +117,11 @@ function generateDates() {
 
         dateCard.innerHTML = `<div class="day-name">${dayName}</div><div class="day-number">${i}</div>`;
 
-        // Обработка клика по дате
         dateCard.addEventListener('click', () => {
             document.querySelectorAll('.date-card').forEach(el => el.classList.remove('active'));
             dateCard.classList.add('active');
             bookingData.date = fullDateString;
             
-            // При смене даты сбрасываем выбранное время
             bookingData.selectedTimes = [];
             document.getElementById('btn-to-step-3').disabled = true;
             generateTimeSlots();
@@ -144,26 +130,36 @@ function generateDates() {
         slider.appendChild(dateCard);
     }
     
-    // Генерируем время для выбранной даты
     generateTimeSlots();
 }
 
+// --- ВОССТАНОВЛЕННАЯ ФУНКЦИЯ КЛИКА ПО ВРЕМЕНИ ---
+function toggleTimeSlot(timeStr, btn) {
+    const index = bookingData.selectedTimes.indexOf(timeStr);
+    if (index > -1) {
+        bookingData.selectedTimes.splice(index, 1);
+        btn.classList.remove('active');
+    } else {
+        bookingData.selectedTimes.push(timeStr);
+        btn.classList.add('active');
+    }
+
+    bookingData.selectedTimes.sort((a, b) => parseInt(a) - parseInt(b));
+    document.getElementById('btn-to-step-3').disabled = bookingData.selectedTimes.length === 0;
+}
+
+// --- ИСПРАВЛЕННАЯ ГЕНЕРАЦИЯ СЛОТОВ ---
 async function generateTimeSlots() {
     const grid = document.getElementById('timeGrid');
-    
-    // 1. Очищаем сетку от старых кнопок и показываем загрузку
     grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #666; padding: 20px;">Загружаем расписание...</div>';
     
     const startHour = 9;
     const endHour = 20;
     let occupiedSlots = [];
 
+    // ИСПРАВЛЕНО: Теперь берем правильные переменные из объекта
     const currentHall = bookingData.hallName; 
-    const currentDate = bookingData.bookingDate; 
-
-    // === ДИАГНОСТИКА: СМОТРИМ В КОНСОЛЬ ===
-    console.log("🔍 ИЩЕМ БРОНИ:");
-    console.log("Зал:", currentHall, "| Дата:", currentDate);
+    const currentDate = bookingData.date; 
 
     if (currentHall && currentDate) {
         try {
@@ -173,10 +169,6 @@ async function generateTimeSlots() {
                 .eq('hall_name', currentHall)
                 .eq('booking_date', currentDate)
                 .eq('is_confirmed', true);
-
-            if (error) console.error("❌ Ошибка базы:", error);
-            
-            console.log("📦 Ответ от базы Supabase:", data);
 
             if (data && data.length > 0) {
                 data.forEach(booking => {
@@ -190,14 +182,10 @@ async function generateTimeSlots() {
                 });
             }
         } catch (err) {
-            console.error('❌ Ошибка в коде:', err);
+            console.error('Ошибка:', err);
         }
     }
 
-    console.log("🔒 Итоговый список занятых часов:", occupiedSlots);
-    // =====================================
-
-    // Блокировка сегодняшнего прошедшего времени
     const now = new Date();
     const todayFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const currentHour = now.getHours();
@@ -211,10 +199,8 @@ async function generateTimeSlots() {
         }
     }
 
-    // 2. ЖЕСТКАЯ ОЧИСТКА: Удаляем загрузку и вообще всё из сетки перед отрисовкой
     grid.innerHTML = ''; 
     
-    // Рисуем кнопки
     for (let h = startHour; h <= endHour; h++) {
         const timeStr = `${h}:00`;
         const btn = document.createElement('button');
@@ -226,7 +212,6 @@ async function generateTimeSlots() {
         if (occupiedSlots.includes(timeStr)) {
             btn.disabled = true;
             btn.title = 'Это время занято';
-            // Принудительно красим в серый, чтобы точно сработало
             btn.style.backgroundColor = '#f0f0f0';
             btn.style.color = '#aaa';
             btn.style.textDecoration = 'line-through';
@@ -235,7 +220,8 @@ async function generateTimeSlots() {
             btn.onclick = () => toggleTimeSlot(timeStr, btn); 
         }
 
-        if (bookingData.bookingTimes && bookingData.bookingTimes.includes(timeStr)) {
+        // ИСПРАВЛЕНО: Проверяем правильный массив
+        if (bookingData.selectedTimes && bookingData.selectedTimes.includes(timeStr)) {
             btn.classList.add('active');
         }
 
@@ -249,10 +235,7 @@ function updateSummaryBox() {
     const dateObj = new Date(bookingData.date);
     const niceDate = `${dateObj.getDate()} ${months[dateObj.getMonth()]}`;
     
-    // Считаем итоговую цену: базовая цена зала * количество выбранных часов
     bookingData.totalPrice = bookingData.basePrice * bookingData.selectedTimes.length;
-    
-    // Красиво выводим выбранные часы через запятую
     const timeStr = bookingData.selectedTimes.join(', ');
 
     summary.innerHTML = `
@@ -264,7 +247,7 @@ function updateSummaryBox() {
     `;
 }
 
-// --- ШАГ 3: ФИНАЛИЗАЦИЯ И ОТПРАВКА В БАЗУ ---
+// --- ОТПРАВКА В БАЗУ ---
 async function submitBooking() {
     const name = document.getElementById('clientName').value;
     const phone = document.getElementById('clientPhone').value;
@@ -275,25 +258,21 @@ async function submitBooking() {
         return;
     }
 
-    // НОВАЯ ПРОВЕРКА: Считаем количество цифр в телефоне
     const digitsOnly = phone.replace(/\D/g, '');
     if (digitsOnly.length < 10) {
         alert('Пожалуйста, введите корректный номер телефона (не менее 10 цифр).');
         return;
     }
 
-    // --- ВОТ ЗДЕСЬ ИСПРАВЛЕНИЕ ---
     bookingData.clientName = name;
-    bookingData.clientPhone = phone; // <-- Вернули телефон на место!
+    bookingData.clientPhone = phone;
     bookingData.clientTg = tg;
-    // -----------------------------
 
     const finishBtn = document.getElementById('btn-finish');
     finishBtn.textContent = 'Оформляем...';
     finishBtn.disabled = true;
 
    try {
-        // ПРАВКА: Теперь тут написано supabaseClient вместо supabase
         const { data, error } = await supabaseClient
             .from('booking')
             .insert([
@@ -309,42 +288,20 @@ async function submitBooking() {
                 }
             ]);
 
-        // Если база вернула ошибку, переходим в блок catch
         if (error) throw error;
 
-        // Если всё успешно:
         alert(`Успешно! ${bookingData.hallName} забронирован на ${bookingData.selectedTimes.length} ч.\nСумма: ${bookingData.totalPrice} ₽.\nМы свяжемся с вами в ближайшее время!`);
-        window.location.href = 'index.html'; // Возвращаем на главную
+        window.location.href = 'index.html'; 
 
     } catch (error) {
         console.error("Ошибка при отправке в базу:", error);
-        alert('Произошла ошибка при бронировании. Пожалуйста, проверьте подключение к интернету или свяжитесь с нами по телефону.');
-        
-        // Возвращаем кнопку в исходное состояние, чтобы клиент мог попробовать еще раз
+        alert('Произошла ошибка при бронировании. Пожалуйста, проверьте подключение к интернету.');
         finishBtn.textContent = 'Подтвердить';
         finishBtn.disabled = false;
     }
-    // --- НАЧАЛО БЛОКА БЛОКИРОВКИ ПРОШЕДШЕГО ВРЕМЕНИ ---
-    const now = new Date();
-    // Формируем сегодняшнюю дату в формате YYYY-MM-DD (как в базе)
-    const todayFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const currentHour = now.getHours();
-
-    // Если клиент выбрал СЕГОДНЯ, проверяем часы
-    if (currentDate === todayFormatted) {
-        for (let h = startHour; h <= endHour; h++) {
-            // Если час уже прошел (или идет прямо сейчас) - блокируем его
-            if (h <= currentHour) {
-                const pastTime = `${h}:00`;
-                if (!occupiedSlots.includes(pastTime)) {
-                    occupiedSlots.push(pastTime);
-                }
-            }
-        }
-    }
-    // --- КОНЕЦ БЛОКА ---
 }
-// --- СВАЙП ДЛЯ КАЛЕНДАРЯ МЫШКОЙ (DRAG-TO-SCROLL) ---
+
+// --- СВАЙП ДЛЯ КАЛЕНДАРЯ ---
 const slider = document.getElementById('dateSlider');
 let isDown = false;
 let startX;
@@ -369,17 +326,17 @@ slider.addEventListener('mouseup', () => {
 
 slider.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-    e.preventDefault(); // Останавливаем выделение текста
+    e.preventDefault(); 
     const x = e.pageX - slider.offsetLeft;
-    const walk = (x - startX) * 2; // Умножаем на 2 для скорости прокрутки
+    const walk = (x - startX) * 2; 
     slider.scrollLeft = scrollLeft - walk;
 });
+
 // --- УМНАЯ МАСКА ДЛЯ ТЕЛЕФОНА ---
 document.getElementById('clientPhone').addEventListener('input', function (e) {
-    let input = e.target.value.replace(/\D/g, ''); // Очищаем от всего, кроме цифр
+    let input = e.target.value.replace(/\D/g, ''); 
     let formatted = '';
 
-    // Если начинается с 7 или 8 (Россия)
     if (['7', '8'].indexOf(input[0]) > -1) {
         let firstDigit = (input[0] === '8') ? '8' : '+7';
         formatted = firstDigit + ' ';
@@ -388,7 +345,6 @@ document.getElementById('clientPhone').addEventListener('input', function (e) {
         if (input.length >= 8) formatted += '-' + input.substring(7, 9);
         if (input.length >= 10) formatted += '-' + input.substring(9, 11);
     } else if (input.length > 0) {
-        // Если другая страна, просто ставим плюс
         formatted = '+' + input;
     }
     e.target.value = formatted;
