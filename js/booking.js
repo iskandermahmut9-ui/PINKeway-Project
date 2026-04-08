@@ -303,7 +303,7 @@ async function submitBooking() {
         const newBookingId = data[0].id;
 
         // 2. Стучимся в Make.com за ссылкой на оплату
-        const makeWebhookUrl = 'https://hook.eu1.make.com/pmofsx3qbn3prdgfg3wsymbzmlywt8hg';
+        const makeWebhookUrl = 'https://hook.eu1.make.com/elmko2plh4pxeksxwa88fx39ne2jxv4c';
         
         const response = await fetch(makeWebhookUrl, {
             method: 'POST',
