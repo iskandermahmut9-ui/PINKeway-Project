@@ -317,27 +317,28 @@ async function submitBooking() {
             })
         });
 
-        // 3. Читаем ответ от Make.com
+        // 3. Читаем ответ
         if (response.ok) {
-            const result = await response.json(); 
+            const result = await response.json(); // Теперь это сработает, когда Make ответит правильно
             
-            // Проверяем именно pay_url (как мы назвали в Make)
-            if (result.pay_url) {
-                // ПЕРЕНАПРАВЛЯЕМ КЛИЕНТА НА КАССУ
+            // Важно: в модуле Response мы написали pay_url
+            if (result && result.pay_url) {
                 window.location.href = result.pay_url;
             } else {
-                alert('Заявка создана! Ошибка получения ссылки на оплату. Мы свяжемся с вами.');
+                console.warn("Make ответил, но ссылки нет:", result);
+                alert('Бронь создана, но не удалось получить ссылку на оплату. Мы свяжемся с вами!');
                 window.location.href = 'index.html';
             }
         } else {
-            const errorText = await response.text();
-            console.error("Ошибка Make.com:", errorText);
-            alert('Сервер оплаты временно недоступен. Попробуйте позже.');
+            const text = await response.text();
+            console.error("Сервер Make ответил ошибкой:", text);
+            alert('Ошибка при создании счета. Попробуйте еще раз или свяжитесь с нами.');
         }
 
     } catch (error) {
         console.error("Критическая ошибка:", error);
         alert('Произошла ошибка. Пожалуйста, проверьте интернет.');
+        const finishBtn = document.getElementById('btn-finish');
         finishBtn.textContent = 'Подтвердить';
         finishBtn.disabled = false;
     }
