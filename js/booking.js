@@ -305,15 +305,18 @@ async function submitBooking() {
        // 2. Стучимся в Make.com за ссылкой на оплату
         const makeWebhookUrl = 'https://hook.eu1.make.com/elmko2plh4pxeksxwa88fx39ne2jxv4c';
         
+        // Очищаем телефон: оставляем только цифры (было +7 (915)... станет 7915...)
+        const cleanPhone = bookingData.clientPhone.replace(/\D/g, '');
+
         const response = await fetch(makeWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 booking_id: newBookingId,
                 amount: bookingData.totalPrice,
-                description: `Бронирование: ${bookingData.hallName} (${bookingData.selectedTimes.length} ч.)`,
+                description: `Бронирование: ${bookingData.hallName}`,
                 client_name: bookingData.clientName,
-                client_phone: bookingData.clientPhone
+                client_phone: cleanPhone // Отправляем уже чистые цифры
             })
         });
 
