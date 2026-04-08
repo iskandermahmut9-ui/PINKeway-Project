@@ -248,16 +248,11 @@ function updateSummaryBox() {
 }
 
 // --- ОТПРАВКА В БАЗУ ---
+// --- ОТПРАВКА В БАЗУ И ПЕРЕХОД К ОПЛАТЕ ---
 async function submitBooking() {
     const name = document.getElementById('clientName').value;
     const phone = document.getElementById('clientPhone').value;
     const tg = document.getElementById('clientTg').value || 'Не указан';
-    // Проверка галочки согласия
-    const legalCheckbox = document.getElementById('legalCheckbox');
-    if (legalCheckbox && !legalCheckbox.checked) {
-        alert('Для бронирования необходимо дать согласие на обработку персональных данных и принять условия оферты.');
-        return;
-    }
     
     if (!name || !phone) {
         alert('Пожалуйста, введите имя и телефон');
@@ -270,34 +265,77 @@ async function submitBooking() {
         return;
     }
 
+    // Проверка галочки согласия (если она у вас стоит)
+    const legalCheckbox = document.getElementById('legalCheckbox');
+    if (legalCheckbox && !legalCheckbox.checked) {
+        alert('Для бронирования необходимо дать согласие на обработку персональных данных и принять условия оферты.');
+        return;
+    }
+
     bookingData.clientName = name;
     bookingData.clientPhone = phone;
     bookingData.clientTg = tg;
 
     const finishBtn = document.getElementById('btn-finish');
-    finishBtn.textContent = 'Оформляем...';
+    finishBtn.textContent = 'Создаем счет...';
     finishBtn.disabled = true;
 
-   try {
+    try {
+        // 1. Сохраняем бронь в Supabase со статусом 'pending'
         const { data, error } = await supabaseClient
             .from('booking')
-            .insert([
-                {
-                    hall_id: bookingData.hallId,
-                    hall_name: bookingData.hallName,
-                    booking_date: bookingData.date,
-                    booking_times: bookingData.selectedTimes,
-                    total_price: bookingData.totalPrice,
-                    client_name: bookingData.clientName,
-                    client_phone: bookingData.clientPhone,
-                    client_tg: bookingData.clientTg
-                }
-            ]);
+            .insert([{
+                hall_id: bookingData.hallId,
+                hall_name: bookingData.hallName,
+                booking_date: bookingData.date,
+                booking_times: bookingData.selectedTimes,
+                total_price: bookingData.totalPrice,
+                client_name: bookingData.clientName,
+                client_phone: bookingData.clientPhone,
+                client_tg: bookingData.clientTg,
+                status: 'pending' // Устанавливаем статус ожидания оплаты
+            }])
+            .select(); // Обязательно запрашиваем ответ, чтобы получить ID
 
         if (error) throw error;
 
-        alert(`Успешно! ${bookingData.hallName} забронирован на ${bookingData.selectedTimes.length} ч.\nСумма: ${bookingData.totalPrice} ₽.\nМы свяжемся с вами в ближайшее время!`);
-        window.location.href = 'index.html'; 
+        // Получаем ID только что созданной заявки
+        const newBookingId = data[0].id;
+
+        // 2. Стучимся в Make.com за ссылкой на оплату
+        const makeWebhookUrl = 'https://hook.eu1.make.com/pmofsx3qbn3prdgfg3wsymbzmlywt8hg';
+        
+        const response = await fetch(makeWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                booking_id: newBookingId,
+                amount: bookingData.totalPrice,
+                description: `Бронирование: ${bookingData.hallName} (${bookingData.selectedTimes.length} ч.)`,
+                client_name: bookingData.clientName,
+                client_phone: bookingData.clientPhone
+            })
+        });
+
+        // 3. Читаем ответ от Make.com
+        const resultText = await response.text(); 
+        
+        try {
+            // Пытаемся прочитать ссылку на оплату
+            const result = JSON.parse(resultText);
+            if (result.confirmation_url) {
+                // ПЕРЕНАПРАВЛЯЕМ КЛИЕНТА НА КАССУ
+                window.location.href = result.confirmation_url;
+            } else {
+                alert('Заявка создана! Сейчас мы настраиваем кассу, поэтому пока без оплаты.');
+                window.location.href = 'index.html';
+            }
+        } catch (e) {
+            // Если Make вернул просто текст "Accepted" (так бывает при первом тесте)
+            console.log("Сигнал в Make прошел:", resultText);
+            alert('Тестовый сигнал в Make.com успешно отправлен! Идите проверять сценарий.');
+            window.location.href = 'index.html';
+        }
 
     } catch (error) {
         console.error("Ошибка при отправке в базу:", error);
@@ -306,7 +344,6 @@ async function submitBooking() {
         finishBtn.disabled = false;
     }
 }
-
 // --- СВАЙП ДЛЯ КАЛЕНДАРЯ ---
 const slider = document.getElementById('dateSlider');
 let isDown = false;
