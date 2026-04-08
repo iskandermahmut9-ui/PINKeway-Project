@@ -302,7 +302,7 @@ async function submitBooking() {
         // Получаем ID только что созданной заявки
         const newBookingId = data[0].id;
 
-        // 2. Стучимся в Make.com за ссылкой на оплату
+       // 2. Стучимся в Make.com за ссылкой на оплату
         const makeWebhookUrl = 'https://hook.eu1.make.com/elmko2plh4pxeksxwa88fx39ne2jxv4c';
         
         const response = await fetch(makeWebhookUrl, {
@@ -318,28 +318,26 @@ async function submitBooking() {
         });
 
         // 3. Читаем ответ от Make.com
-        const resultText = await response.text(); 
-        
-        try {
-            // Пытаемся прочитать ссылку на оплату
-            const result = JSON.parse(resultText);
-            if (result.confirmation_url) {
+        if (response.ok) {
+            const result = await response.json(); 
+            
+            // Проверяем именно pay_url (как мы назвали в Make)
+            if (result.pay_url) {
                 // ПЕРЕНАПРАВЛЯЕМ КЛИЕНТА НА КАССУ
-                window.location.href = result.confirmation_url;
+                window.location.href = result.pay_url;
             } else {
-                alert('Заявка создана! Сейчас мы настраиваем кассу, поэтому пока без оплаты.');
+                alert('Заявка создана! Ошибка получения ссылки на оплату. Мы свяжемся с вами.');
                 window.location.href = 'index.html';
             }
-        } catch (e) {
-            // Если Make вернул просто текст "Accepted" (так бывает при первом тесте)
-            console.log("Сигнал в Make прошел:", resultText);
-            alert('Тестовый сигнал в Make.com успешно отправлен! Идите проверять сценарий.');
-            window.location.href = 'index.html';
+        } else {
+            const errorText = await response.text();
+            console.error("Ошибка Make.com:", errorText);
+            alert('Сервер оплаты временно недоступен. Попробуйте позже.');
         }
 
     } catch (error) {
-        console.error("Ошибка при отправке в базу:", error);
-        alert('Произошла ошибка при бронировании. Пожалуйста, проверьте подключение к интернету.');
+        console.error("Критическая ошибка:", error);
+        alert('Произошла ошибка. Пожалуйста, проверьте интернет.');
         finishBtn.textContent = 'Подтвердить';
         finishBtn.disabled = false;
     }
