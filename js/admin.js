@@ -181,116 +181,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
 
-        // Массив, в который мы сложим все строки (и реальные, и авто-уборки)
-        let rowsToDisplay = [];
-
         bookings.forEach(b => {
             const bDate = new Date(b.booking_date);
-            
-            // 1. Исключаем "ручные" уборки из статистики выручки
-            let isManualCleaning = b.client_name && b.client_name.toLowerCase().includes('уборка');
-            
             if (b.is_confirmed === true && bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear) {
-                if (!isManualCleaning) {
-                    totalRevenue += b.total_price;
-                }
+                totalRevenue += b.total_price;
                 totalConfirmed += 1;
             }
-
-            // Добавляем реальную бронь в список на отрисовку
-            rowsToDisplay.push({ ...b, isAutoCleaning: false });
-
-            // 2. АВТО-УБОРКА: Если это водный зал и бронь не отменена
-            if ((b.hall_name === 'atlantis' || b.hall_name === 'aqualia' || b.hall_name === 'Атлантис' || b.hall_name === 'Аквалия') && 
-                (b.status === 'paid' || b.is_confirmed === true) && !isManualCleaning) {
-                
-                let times = b.booking_times;
-                if (typeof times === 'string') {
-                    try { times = JSON.parse(times); } catch (e) { times = [times]; }
-                }
-                
-                if (Array.isArray(times) && times.length > 0) {
-                    // Находим самый поздний час брони
-                    let maxHour = 0;
-                    times.forEach(t => {
-                        let h = parseInt(t.split(':')[0]);
-                        if (h > maxHour) maxHour = h;
-                    });
-                    
-                    let cleaningHour = maxHour + 1;
-                    
-                    // Создаем фейковую строчку для таблицы (если время в рамках рабочего дня)
-                    if (cleaningHour <= 20) {
-                        rowsToDisplay.push({
-                            id: 'cleaning_' + b.id, // фейковый ID
-                            created_at: b.created_at,
-                            booking_date: b.booking_date,
-                            booking_times: [`${cleaningHour}:00`],
-                            hall_name: b.hall_name,
-                            client_name: 'Технический час',
-                            client_phone: 'Уборка (Авто)',
-                            client_tg: '',
-                            total_price: 0, // Уборка бесплатная!
-                            status: 'paid',
-                            is_confirmed: true,
-                            isAutoCleaning: true // флаг, что это наша дорисовка
-                        });
-                    }
-                }
-            }
         });
-
-        // Сортируем общий массив, чтобы уборка шла сразу за реальной бронью
-        rowsToDisplay.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         document.getElementById('monthlyRevenue').textContent = totalRevenue.toLocaleString('ru-RU') + ' ₽';
         document.getElementById('monthlyBookings').textContent = totalConfirmed;
 
-        // Рисуем все строки из нового массива
-        rowsToDisplay.forEach(booking => {
+        bookings.forEach(booking => {
             const tr = document.createElement('tr');
             const timeStr = Array.isArray(booking.booking_times) ? booking.booking_times.join(', ') : booking.booking_times;
             
+            // Превращаем страшную дату из базы в красивую (например, "10.04.2026 14:35")
             const createdDate = new Date(booking.created_at);
             const createdStr = `${createdDate.toLocaleDateString('ru-RU')} <span style="color:#888; font-size:0.9em">${createdDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}</span>`;
             
             let statusHtml = '';
             let confirmBtn = '';
             
-            if (booking.isAutoCleaning) {
-                // Стиль для технического часа
-                tr.style.backgroundColor = '#fdf5f8'; 
-                statusHtml = '<span style="color: #888; font-style: italic;">Заблокировано</span>';
-                confirmBtn = `<span style="font-size: 0.8em; color: #aaa;">Авто</span>`;
+            // Сначала проверяем, подтверждена ли бронь (вручную или через кассу)
+            if (booking.status === 'paid' || booking.is_confirmed === true) {
+                statusHtml = '<span style="color: #27ae60; font-weight: bold;">Подтверждено</span>';
             } else {
-                // Стандартный стиль для реальных броней
-                if (booking.status === 'paid' || booking.is_confirmed === true) {
-                    statusHtml = '<span style="color: #27ae60; font-weight: bold;">Подтверждено</span>';
-                } else {
-                    statusHtml = '<span style="color: #f39c12; font-weight: bold;">Ожидает</span>';
-                    confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить вручную">✓</button>`;
-                }
-                confirmBtn += `<button class="action-btn btn-delete" onclick="deleteBooking('${booking.id}')" title="Удалить бронь">✕</button>`;
-            }
-
-            // Если это ваша ручная уборка - делаем ее серенькой, чтобы не мешала
-            if (booking.client_name && booking.client_name.toLowerCase().includes('уборка') && !booking.isAutoCleaning) {
-                 tr.style.opacity = '0.6';
-                 tr.style.backgroundColor = '#f4f4f9';
+                // Если нет, значит ждет оплаты или решения админа
+                statusHtml = '<span style="color: #f39c12; font-weight: bold;">Ожидает</span>';
+                confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить вручную">✓</button>`;
             }
 
             tr.innerHTML = `
-                <td>${createdStr}</td> 
-                <td><strong>${booking.booking_date}</strong><br><span style="color: #666; font-size: 0.9em;">${timeStr}</span></td>
+                <td>${createdStr}</td> <td><strong>${booking.booking_date}</strong><br><span style="color: #666; font-size: 0.9em;">${timeStr}</span></td>
                 <td><strong>${booking.hall_name}</strong><br><span style="color: #666; font-size: 0.9em;">${booking.total_price} ₽</span></td>
                 <td>${booking.client_name}</td>
                 <td>${booking.client_phone}<br><span style="color: #d880a6; font-size: 0.9em;">${booking.client_tg}</span></td>
                 <td>${statusHtml}</td>
-                <td>${confirmBtn}</td>
+                <td>
+                    ${confirmBtn}
+                    <button class="action-btn btn-delete" onclick="deleteBooking('${booking.id}')" title="Удалить бронь">✕</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
-    
+    }
+});
 
 // Глобальные функции для кнопок в таблице и календаре
 window.confirmBooking = async function(id) {
