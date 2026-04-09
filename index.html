@@ -95,7 +95,8 @@
             </div>
         </div>
         <div class="hall-card">
-            <div class="hall-image" onclick="openGallery('respecta')" style="background-image: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-image" onclick="openGallery('respecta')" style="background-image: url('assets/images/halls/respecta-1.jpg');">
+            </div>
             <div class="hall-info">
                 <h3>Респекта</h3>
                 <ul>
@@ -111,7 +112,7 @@
         </div>
 
         <div class="hall-card">
-            <div class="hall-image" onclick="openGallery('atlantis')" style="background-image: url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-image" onclick="openGallery('atlantis')" style="background-image: url('assets/images/halls/atlantis-1.jpg');"></div>
             <div class="hall-info">
                 <h3>Атлантис</h3>
                 <ul>
@@ -127,7 +128,7 @@
         </div>
 
         <div class="hall-card">
-            <div class="hall-image" onclick="openGallery('aqualia')" style="background-image: url('https://images.unsplash.com/photo-1507652313519-d4e9174996dd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-image" onclick="openGallery('aqualia')" style="background-image: url('assets/images/halls/aqualia-1.jpg');"></div>
             <div class="hall-info">
                 <h3>Аквалия</h3>
                 <ul>
@@ -143,7 +144,7 @@
         </div>
 
         <div class="hall-card">
-            <div class="hall-image" onclick="openGallery('cream')" style="background-image: url('https://images.unsplash.com/photo-1554995207-c18c203602cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');"></div>
+            <div class="hall-image" onclick="openGallery('cream')" style="background-image: url('assets/images/halls/cream-1.jpg');"></div>
             <div class="hall-info">
                 <h3>Крем</h3>
                 <ul>
@@ -249,12 +250,36 @@
 <script>
     // Простая логика карусели для залов
     const galleries = {
-        'fortessa': ['https://images.unsplash.com/photo-1598928506311-c95148c8ab1a?w=800', 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?w=800'],
-        'black_royal': ['https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800'],
-        'respecta': ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800'],
-        'atlantis': ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800'],
-        'aqualia': ['https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800'],
-        'cream': ['https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800']
+        'fortessa': [
+            'assets/images/halls/fortessa-1.jpg', 
+            'assets/images/halls/fortessa-2.jpg', 
+            'assets/images/halls/fortessa-3.jpg'
+        ],
+        'black_royal': [
+            'assets/images/halls/blackroyal-1.jpg', 
+            'assets/images/halls/blackroyal-2.jpg', 
+            'assets/images/halls/blackroyal-3.jpg'
+        ],
+        'respecta': [
+            'assets/images/halls/respecta-1.jpg',
+            'assets/images/halls/respecta-2.jpg',
+            'assets/images/halls/respecta-3.jpg'
+        ],
+        'atlantis': [
+            'assets/images/halls/atlantis-1.jpg',
+            'assets/images/halls/atlantis-2.jpg',
+            'assets/images/halls/atlantis-3.jpg'
+        ],
+        'aqualia': [
+            'assets/images/halls/aqualia-1.jpg',
+            'assets/images/halls/aqualia-2.jpg',
+            'assets/images/halls/aqualia-3.jpg'
+        ],
+        'cream': [
+            'assets/images/halls/cream-1.jpg',
+            'assets/images/halls/cream-2.jpg',
+            'assets/images/halls/cream-3.jpg'
+        ]
     };
 
     let currentGallery = [];
