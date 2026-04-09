@@ -148,7 +148,7 @@ function toggleTimeSlot(timeStr, btn) {
     document.getElementById('btn-to-step-3').disabled = bookingData.selectedTimes.length === 0;
 }
 
-// --- ИСПРАВЛЕННАЯ ГЕНЕРАЦИЯ СЛОТОВ (С УДЕРЖАНИЕМ 10 МИНУТ) ---
+// --- ИСПРАВЛЕННАЯ ГЕНЕРАЦИЯ СЛОТОВ (С УДЕРЖАНИЕМ 60 МИНУТ) ---
 async function generateTimeSlots() {
     const grid = document.getElementById('timeGrid');
     grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #666; padding: 20px;">Загружаем расписание...</div>';
@@ -184,8 +184,8 @@ async function generateTimeSlots() {
                         const bookingTime = new Date(booking.created_at).getTime();
                         const diffInMinutes = (now - bookingTime) / (1000 * 60);
                         
-                        // Если с момента создания прошло меньше 10 минут — блокируем
-                        if (diffInMinutes <= 10) {
+                        // Если с момента создания прошло меньше 60 минут — блокируем
+                        if (diffInMinutes <= 60) { // <--- ИЗМЕНИЛИ 10 НА 60 ЗДЕСЬ
                             isSlotOccupied = true;
                         }
                     }
