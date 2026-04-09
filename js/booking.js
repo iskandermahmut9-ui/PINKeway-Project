@@ -197,7 +197,24 @@ async function generateTimeSlots() {
                             try { times = JSON.parse(times); } catch (e) { times = [times]; }
                         }
                         if (Array.isArray(times)) {
+                            // 1. Сначала блокируем само время брони
                             occupiedSlots.push(...times);
+
+                            // 2. АВТО-УБОРКА: Блокируем следующий час для водных залов
+                            if (currentHall === 'atlantis' || currentHall === 'aqualia' || currentHall === 'Атлантис' || currentHall === 'Аквалия') {
+                                let maxHour = 0;
+                                times.forEach(t => {
+                                    let h = parseInt(t.split(':')[0]);
+                                    if (h > maxHour) maxHour = h;
+                                });
+                                
+                                let cleaningHour = maxHour + 1;
+                                
+                                // Блокируем следующий час, если студия еще работает (до 20:00)
+                                if (cleaningHour <= 20) { 
+                                    occupiedSlots.push(`${cleaningHour}:00`);
+                                }
+                            }
                         }
                     }
                 });
