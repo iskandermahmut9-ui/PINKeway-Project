@@ -181,7 +181,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         let rowsToDisplay = [];
 
         bookings.forEach(b => {
-            const bDate = new Date(b.booking_date);
+            // ИЗМЕНЕНИЕ: Теперь смотрим на дату поступления денег, а не на дату аренды
+            const bDate = new Date(b.created_at); 
             
             // Исключаем "ручные" уборки из статистики выручки
             let isManualCleaning = b.client_name && b.client_name.toLowerCase().includes('уборка');
