@@ -203,12 +203,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             let statusHtml = '';
             let confirmBtn = '';
             
-            // Заменили проверку: теперь смотрим на статус
-            if (booking.status === 'pending') {
+            // Сначала проверяем, подтверждена ли бронь (вручную или через кассу)
+            if (booking.status === 'paid' || booking.is_confirmed === true) {
+                statusHtml = '<span style="color: #27ae60; font-weight: bold;">Подтверждено</span>';
+            } else {
+                // Если нет, значит ждет оплаты или решения админа
                 statusHtml = '<span style="color: #f39c12; font-weight: bold;">Ожидает</span>';
                 confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить вручную">✓</button>`;
-            } else if (booking.status === 'paid' || booking.is_confirmed) {
-                statusHtml = '<span style="color: #27ae60; font-weight: bold;">Оплачено</span>';
             }
 
             tr.innerHTML = `
@@ -232,7 +233,10 @@ window.confirmBooking = async function(id) {
     if (confirm('Подтвердить это время? Оно закроется в календаре для всех клиентов.')) {
         const { error } = await supabaseClient
             .from('booking')
-            .update({ is_confirmed: true }) 
+            .update({ 
+                is_confirmed: true,
+                status: 'paid' 
+            }) 
             .eq('id', id);
             
         if (error) alert('Ошибка: ' + error.message);
