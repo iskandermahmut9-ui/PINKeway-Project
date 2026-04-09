@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutBtn.style.display = 'inline-block';
         
         loadBookingsTable();
-        initAdminCalendar(); 
+        initAdminCalendar(); // Запускаем календарь!
     }
 
     // --- ЛОГИКА КАЛЕНДАРЯ АДМИНА ---
@@ -94,12 +94,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             card.addEventListener('click', () => {
                 adminSelectedDateStr = dateStr;
-                renderAdminDates(); 
+                renderAdminDates(); // Перерисовываем, чтобы сдвинуть класс active
             });
             
             slider.appendChild(card);
         }
-        renderAdminTimes(); 
+        renderAdminTimes(); // Рисуем часы для выбранного дня
     }
 
     async function renderAdminTimes() {
@@ -108,13 +108,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const selectedHall = document.getElementById('adminHallSelect').value;
         
+        // Достаем брони из базы для этого зала и этой даты
         const { data, error } = await supabaseClient
             .from('booking')
             .select('id, booking_times, is_confirmed')
             .eq('hall_name', selectedHall)
             .eq('booking_date', adminSelectedDateStr);
 
-        let bookedSlots = {}; 
+        let bookedSlots = {}; // {'10:00': {status: 'pending', id: '...'}, ...}
 
         if (data) {
             data.forEach(booking => {
@@ -135,6 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         grid.innerHTML = '';
         
+        // Рисуем кнопки с 9:00 до 20:00
         for (let h = 9; h <= 20; h++) {
             const timeStr = `${h}:00`;
             const btn = document.createElement('button');
@@ -150,6 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     btn.className += 'status-pending';
                     btn.title = 'Нажмите, чтобы подтвердить эту бронь';
+                    // Если админ кликает на желтую кнопку - сразу подтверждаем!
                     btn.onclick = () => confirmBooking(bookingInfo.id);
                 }
             } else {
@@ -178,110 +181,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
 
-        let rowsToDisplay = [];
-
         bookings.forEach(b => {
             const bDate = new Date(b.booking_date);
-            
-            // Исключаем "ручные" уборки из статистики выручки
-            let isManualCleaning = b.client_name && b.client_name.toLowerCase().includes('уборка');
-            
             if (b.is_confirmed === true && bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear) {
-                if (!isManualCleaning) {
-                    totalRevenue += b.total_price;
-                }
+                totalRevenue += b.total_price;
                 totalConfirmed += 1;
             }
-
-            rowsToDisplay.push({ ...b, isAutoCleaning: false });
-
-            // АВТО-УБОРКА
-            if ((b.hall_name === 'atlantis' || b.hall_name === 'aqualia' || b.hall_name === 'Атлантис' || b.hall_name === 'Аквалия') && 
-                (b.status === 'paid' || b.is_confirmed === true) && !isManualCleaning) {
-                
-                let times = b.booking_times;
-                if (typeof times === 'string') {
-                    try { times = JSON.parse(times); } catch (e) { times = [times]; }
-                }
-                
-                if (Array.isArray(times) && times.length > 0) {
-                    let maxHour = 0;
-                    times.forEach(t => {
-                        let h = parseInt(t.split(':')[0]);
-                        if (h > maxHour) maxHour = h;
-                    });
-                    
-                    let cleaningHour = maxHour + 1;
-                    
-                    if (cleaningHour <= 20) {
-                        rowsToDisplay.push({
-                            id: 'cleaning_' + b.id, 
-                            created_at: b.created_at,
-                            booking_date: b.booking_date,
-                            booking_times: [`${cleaningHour}:00`],
-                            hall_name: b.hall_name,
-                            client_name: 'Технический час',
-                            client_phone: 'Уборка (Авто)',
-                            client_tg: '',
-                            total_price: 0,
-                            status: 'paid',
-                            is_confirmed: true,
-                            isAutoCleaning: true 
-                        });
-                    }
-                }
-            }
         });
-
-        rowsToDisplay.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         document.getElementById('monthlyRevenue').textContent = totalRevenue.toLocaleString('ru-RU') + ' ₽';
         document.getElementById('monthlyBookings').textContent = totalConfirmed;
 
-        rowsToDisplay.forEach(booking => {
+        bookings.forEach(booking => {
             const tr = document.createElement('tr');
             const timeStr = Array.isArray(booking.booking_times) ? booking.booking_times.join(', ') : booking.booking_times;
             
+            // Превращаем страшную дату из базы в красивую (например, "10.04.2026 14:35")
             const createdDate = new Date(booking.created_at);
             const createdStr = `${createdDate.toLocaleDateString('ru-RU')} <span style="color:#888; font-size:0.9em">${createdDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}</span>`;
             
             let statusHtml = '';
             let confirmBtn = '';
             
-            if (booking.isAutoCleaning) {
-                tr.style.backgroundColor = '#fdf5f8'; 
-                statusHtml = '<span style="color: #888; font-style: italic;">Заблокировано</span>';
-                confirmBtn = `<span style="font-size: 0.8em; color: #aaa;">Авто</span>`;
+            // Сначала проверяем, подтверждена ли бронь (вручную или через кассу)
+            if (booking.status === 'paid' || booking.is_confirmed === true) {
+                statusHtml = '<span style="color: #27ae60; font-weight: bold;">Подтверждено</span>';
             } else {
-                if (booking.status === 'paid' || booking.is_confirmed === true) {
-                    statusHtml = '<span style="color: #27ae60; font-weight: bold;">Подтверждено</span>';
-                } else {
-                    statusHtml = '<span style="color: #f39c12; font-weight: bold;">Ожидает</span>';
-                    confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить вручную">✓</button>`;
-                }
-                confirmBtn += `<button class="action-btn btn-delete" onclick="deleteBooking('${booking.id}')" title="Удалить бронь">✕</button>`;
-            }
-
-            if (booking.client_name && booking.client_name.toLowerCase().includes('уборка') && !booking.isAutoCleaning) {
-                 tr.style.opacity = '0.6';
-                 tr.style.backgroundColor = '#f4f4f9';
+                // Если нет, значит ждет оплаты или решения админа
+                statusHtml = '<span style="color: #f39c12; font-weight: bold;">Ожидает</span>';
+                confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить вручную">✓</button>`;
             }
 
             tr.innerHTML = `
-                <td>${createdStr}</td> 
-                <td><strong>${booking.booking_date}</strong><br><span style="color: #666; font-size: 0.9em;">${timeStr}</span></td>
+                <td>${createdStr}</td> <td><strong>${booking.booking_date}</strong><br><span style="color: #666; font-size: 0.9em;">${timeStr}</span></td>
                 <td><strong>${booking.hall_name}</strong><br><span style="color: #666; font-size: 0.9em;">${booking.total_price} ₽</span></td>
                 <td>${booking.client_name}</td>
                 <td>${booking.client_phone}<br><span style="color: #d880a6; font-size: 0.9em;">${booking.client_tg}</span></td>
                 <td>${statusHtml}</td>
-                <td>${confirmBtn}</td>
+                <td>
+                    ${confirmBtn}
+                    <button class="action-btn btn-delete" onclick="deleteBooking('${booking.id}')" title="Удалить бронь">✕</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
     }
-}); // <-- Эта скобка была потеряна в прошлый раз!
+});
 
-// Глобальные функции
+// Глобальные функции для кнопок в таблице и календаре
 window.confirmBooking = async function(id) {
     if (confirm('Подтвердить это время? Оно закроется в календаре для всех клиентов.')) {
         const { error } = await supabaseClient
@@ -308,7 +255,7 @@ window.deleteBooking = async function(id) {
         else location.reload();
     }
 };
-
+// --- ФУНКЦИЯ ПРОКРУТКИ МЫШКОЙ (DRAG-TO-SCROLL) ---
 function initDragToScroll(sliderId) {
     const slider = document.getElementById(sliderId);
     if (!slider) return;
@@ -328,13 +275,14 @@ function initDragToScroll(sliderId) {
         if (!isDown) return;
         e.preventDefault();
         const x = e.pageX - slider.offsetLeft;
-        const walk = (x - startX) * 2; 
+        const walk = (x - startX) * 2; // Скорость прокрутки
         slider.scrollLeft = scrollLeft - walk;
     });
 }
 
+// Запускаем прокрутку для админского календаря при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         initDragToScroll('adminDateSlider');
-    }, 500); 
+    }, 500); // Небольшая задержка, чтобы элементы успели создаться
 });
