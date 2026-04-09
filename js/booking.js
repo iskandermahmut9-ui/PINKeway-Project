@@ -148,7 +148,7 @@ function toggleTimeSlot(timeStr, btn) {
     document.getElementById('btn-to-step-3').disabled = bookingData.selectedTimes.length === 0;
 }
 
-// --- ИСПРАВЛЕННАЯ ГЕНЕРАЦИЯ СЛОТОВ ---
+// --- ИСПРАВЛЕННАЯ ГЕНЕРАЦИЯ СЛОТОВ (С УДЕРЖАНИЕМ 10 МИНУТ) ---
 async function generateTimeSlots() {
     const grid = document.getElementById('timeGrid');
     grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #666; padding: 20px;">Загружаем расписание...</div>';
@@ -157,35 +157,57 @@ async function generateTimeSlots() {
     const endHour = 20;
     let occupiedSlots = [];
 
-    // ИСПРАВЛЕНО: Теперь берем правильные переменные из объекта
     const currentHall = bookingData.hallName; 
     const currentDate = bookingData.date; 
 
     if (currentHall && currentDate) {
         try {
+            // Запрашиваем ВСЕ заявки (и paid, и pending), достаем время создания и статус
             const { data, error } = await supabaseClient
                 .from('booking')
-                .select('booking_times')
+                .select('booking_times, status, is_confirmed, created_at')
                 .eq('hall_name', currentHall)
-                .eq('booking_date', currentDate)
-                .eq('is_confirmed', true);
+                .eq('booking_date', currentDate);
 
             if (data && data.length > 0) {
+                const now = new Date().getTime();
+
                 data.forEach(booking => {
-                    let times = booking.booking_times;
-                    if (typeof times === 'string') {
-                        try { times = JSON.parse(times); } catch (e) { times = [times]; }
+                    let isSlotOccupied = false;
+
+                    // 1. Если оплачено или подтверждено админом — блокируем железно
+                    if (booking.status === 'paid' || booking.is_confirmed === true) {
+                        isSlotOccupied = true;
+                    } 
+                    // 2. Если 'pending' (ждет оплаты) — проверяем время
+                    else if (booking.status === 'pending') {
+                        const bookingTime = new Date(booking.created_at).getTime();
+                        const diffInMinutes = (now - bookingTime) / (1000 * 60);
+                        
+                        // Если с момента создания прошло меньше 10 минут — блокируем
+                        if (diffInMinutes <= 10) {
+                            isSlotOccupied = true;
+                        }
                     }
-                    if (Array.isArray(times)) {
-                        occupiedSlots.push(...times);
+
+                    // Если проверка пройдена, добавляем часы в список занятых
+                    if (isSlotOccupied) {
+                        let times = booking.booking_times;
+                        if (typeof times === 'string') {
+                            try { times = JSON.parse(times); } catch (e) { times = [times]; }
+                        }
+                        if (Array.isArray(times)) {
+                            occupiedSlots.push(...times);
+                        }
                     }
                 });
             }
         } catch (err) {
-            console.error('Ошибка:', err);
+            console.error('Ошибка загрузки расписания:', err);
         }
     }
 
+    // Блокируем прошедшие часы для сегодняшнего дня
     const now = new Date();
     const todayFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const currentHour = now.getHours();
@@ -201,6 +223,7 @@ async function generateTimeSlots() {
 
     grid.innerHTML = ''; 
     
+    // Отрисовываем кнопки
     for (let h = startHour; h <= endHour; h++) {
         const timeStr = `${h}:00`;
         const btn = document.createElement('button');
@@ -211,7 +234,7 @@ async function generateTimeSlots() {
 
         if (occupiedSlots.includes(timeStr)) {
             btn.disabled = true;
-            btn.title = 'Это время занято';
+            btn.title = 'Это время занято или прямо сейчас оплачивается';
             btn.style.backgroundColor = '#f0f0f0';
             btn.style.color = '#aaa';
             btn.style.textDecoration = 'line-through';
@@ -220,7 +243,6 @@ async function generateTimeSlots() {
             btn.onclick = () => toggleTimeSlot(timeStr, btn); 
         }
 
-        // ИСПРАВЛЕНО: Проверяем правильный массив
         if (bookingData.selectedTimes && bookingData.selectedTimes.includes(timeStr)) {
             btn.classList.add('active');
         }
@@ -326,6 +348,13 @@ async function submitBooking() {
             
             // Важно: в модуле Response мы написали pay_url
             if (result && result.pay_url) {
+                // СОХРАНЯЕМ ДАННЫЕ ДЛЯ СТРАНИЦЫ УСПЕХА
+                localStorage.setItem('lastBooking', JSON.stringify({
+                    hall: bookingData.hallName,
+                    date: bookingData.date,
+                    time: bookingData.selectedTimes.join(', ')
+                }));
+                // ПЕРЕНАПРАВЛЯЕМ КЛИЕНТА НА КАССУ
                 window.location.href = result.pay_url;
             } else {
                 console.warn("Make ответил, но ссылки нет:", result);

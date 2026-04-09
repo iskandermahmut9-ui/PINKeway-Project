@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата успешна - PINKeway</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .success-container { text-align: center; padding: 80px 20px; max-width: 500px; margin: 0 auto; }
+        .success-icon { font-size: 60px; margin-bottom: 20px; }
+        .booking-details { background: #fdf5f8; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: left; border: 1px solid #f2d4e1; }
+        .booking-details p { margin: 8px 0; font-size: 1.1em; }
+        .btn-home { display: inline-block; padding: 12px 30px; background: #d880a6; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; }
+        .btn-home:hover { background: #c66a93; }
+    </style>
+</head>
+<body>
+
+    <div class="success-container">
+        <div class="success-icon">✅</div>
+        <h1 style="color: #333;">Оплата прошла успешно!</h1>
+        <p style="color: #666;">Спасибо за бронирование. Ждем вас в нашей студии!</p>
+
+        <div id="orderDetails" class="booking-details">
+            <p style="text-align: center; color: #888;">Загрузка деталей брони...</p>
+        </div>
+
+        <a href="index.html" class="btn-home">Вернуться на главную</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const detailsDiv = document.getElementById('orderDetails');
+            const savedData = localStorage.getItem('lastBooking');
+
+            if (savedData) {
+                const booking = JSON.parse(savedData);
+                // Форматируем красивую дату (чтобы было "10 апреля" вместо "2026-04-10")
+                const d = new Date(booking.date);
+                const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+                const niceDate = `${d.getDate()} ${months[d.getMonth()]}`;
+
+                detailsDiv.innerHTML = `
+                    <p><strong>Зал:</strong> ${booking.hall}</p>
+                    <p><strong>Дата:</strong> ${niceDate}</p>
+                    <p><strong>Время:</strong> ${booking.time}</p>
+                `;
+                // Очищаем память, чтобы данные не висели вечно
+                localStorage.removeItem('lastBooking');
+            } else {
+                // Если клиент зашел по прямой ссылке, а не после оплаты
+                detailsDiv.innerHTML = '<p style="text-align: center;">Ваша бронь подтверждена!</p>';
+            }
+        });
+    </script>
+</body>
+</html>

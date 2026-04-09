@@ -196,18 +196,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tr = document.createElement('tr');
             const timeStr = Array.isArray(booking.booking_times) ? booking.booking_times.join(', ') : booking.booking_times;
             
+            // Превращаем страшную дату из базы в красивую (например, "10.04.2026 14:35")
+            const createdDate = new Date(booking.created_at);
+            const createdStr = `${createdDate.toLocaleDateString('ru-RU')} <span style="color:#888; font-size:0.9em">${createdDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}</span>`;
+            
             let statusHtml = '';
             let confirmBtn = '';
             
-            if (!booking.is_confirmed) {
+            // Заменили проверку: теперь смотрим на статус
+            if (booking.status === 'pending') {
                 statusHtml = '<span style="color: #f39c12; font-weight: bold;">Ожидает</span>';
-                confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить бронь">✓</button>`;
-            } else {
-                statusHtml = '<span style="color: #e74c3c; font-weight: bold;">Подтверждено</span>';
+                confirmBtn = `<button class="action-btn btn-confirm" onclick="confirmBooking('${booking.id}')" title="Подтвердить вручную">✓</button>`;
+            } else if (booking.status === 'paid' || booking.is_confirmed) {
+                statusHtml = '<span style="color: #27ae60; font-weight: bold;">Оплачено</span>';
             }
 
             tr.innerHTML = `
-                <td><strong>${booking.booking_date}</strong><br><span style="color: #666; font-size: 0.9em;">${timeStr}</span></td>
+                <td>${createdStr}</td> <td><strong>${booking.booking_date}</strong><br><span style="color: #666; font-size: 0.9em;">${timeStr}</span></td>
                 <td><strong>${booking.hall_name}</strong><br><span style="color: #666; font-size: 0.9em;">${booking.total_price} ₽</span></td>
                 <td>${booking.client_name}</td>
                 <td>${booking.client_phone}<br><span style="color: #d880a6; font-size: 0.9em;">${booking.client_tg}</span></td>
