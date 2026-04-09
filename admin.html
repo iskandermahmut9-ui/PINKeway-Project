@@ -147,6 +147,25 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/admin.js"></script>
-
+<div id="adminBookingModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 15px; width: 350px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; color: #333;">Новая бронь</h3>
+        <p id="adminModalInfo" style="color: #666; font-size: 0.9em; margin-bottom: 20px;"></p>
+        
+        <input type="text" id="adminNewClientName" placeholder="Имя клиента" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        <input type="text" id="adminNewClientPhone" placeholder="Телефон или соцсеть" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        
+        <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em;">Тариф:</label>
+        <select id="adminNewPrice" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+            <option value="1700">Стандартный (1700 ₽)</option>
+            <option value="500">Акция 1+1 (Второй зал - 500 ₽)</option>
+        </select>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeAdminBookingModal()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; background: #eee; cursor: pointer;">Отмена</button>
+            <button onclick="submitManualBooking()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; background: #d880a6; color: white; cursor: pointer; font-weight: bold;">Удержать (1 час)</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

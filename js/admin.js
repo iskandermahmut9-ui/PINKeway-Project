@@ -154,6 +154,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             } else {
                 btn.className += 'status-free';
+                // НОВАЯ СТРОКА: При клике на свободное время открываем модалку
+                btn.onclick = () => openAdminBookingModal(selectedHall, adminSelectedDateStr, timeStr);
             }
             
             grid.appendChild(btn);
@@ -339,3 +341,56 @@ document.addEventListener('DOMContentLoaded', () => {
         initDragToScroll('adminDateSlider');
     }, 500); 
 });
+// --- ЛОГИКА РУЧНОГО БРОНИРОВАНИЯ ИЗ АДМИНКИ ---
+
+let manualBookingData = { hall: '', date: '', time: '' };
+
+window.openAdminBookingModal = function(hall, date, time) {
+    manualBookingData = { hall, date, time };
+    document.getElementById('adminModalInfo').innerHTML = `Зал: <strong>${hall}</strong><br>Дата: <strong>${date}</strong><br>Время: <strong>${time}</strong>`;
+    
+    // Очищаем поля
+    document.getElementById('adminNewClientName').value = '';
+    document.getElementById('adminNewClientPhone').value = '';
+    document.getElementById('adminNewPrice').value = '1700'; // По умолчанию стандарт
+    
+    document.getElementById('adminBookingModal').style.display = 'flex';
+};
+
+window.closeAdminBookingModal = function() {
+    document.getElementById('adminBookingModal').style.display = 'none';
+};
+
+window.submitManualBooking = async function() {
+    let name = document.getElementById('adminNewClientName').value || 'Без имени';
+    const phone = document.getElementById('adminNewClientPhone').value || 'Не указан';
+    const price = document.getElementById('adminNewPrice').value;
+
+    // Если выбрана акция, автоматически дописываем это к имени
+    if (price === '500') {
+        name += ' (Акция 1+1)';
+    }
+
+    const bookingData = {
+        hall_name: manualBookingData.hall,
+        booking_date: manualBookingData.date,
+        booking_times: JSON.stringify([manualBookingData.time]),
+        client_name: name,
+        client_phone: phone,
+        client_tg: 'Ручная бронь',
+        total_price: parseInt(price),
+        status: 'pending', // Магия: ставим в ожидание, включится таймер 60 минут!
+        is_confirmed: false
+    };
+
+    const { data, error } = await supabaseClient
+        .from('booking')
+        .insert([bookingData]);
+
+    if (error) {
+        alert('Ошибка при создании брони: ' + error.message);
+    } else {
+        closeAdminBookingModal();
+        location.reload(); // Перезагружаем, чтобы обновить таблицу и календарь
+    }
+};
