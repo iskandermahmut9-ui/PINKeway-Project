@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Оплата успешна - PINKeway</title>
+    <title>Статус бронирования | PINKeway</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         .success-container { text-align: center; padding: 80px 20px; max-width: 500px; margin: 0 auto; }
@@ -14,8 +14,7 @@
         .btn-home:hover { background: #c66a93; }
     </style>
 </head>
-<body>
-<!-- Yandex.Metrika counter -->
+<body style="background-color: #f8f9fa;">
 <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
         m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -27,41 +26,85 @@
     ym(108466773, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/108466773" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
-    <div class="success-container">
-        <div class="success-icon">✅</div>
-        <h1 style="color: #333;">Оплата прошла успешно!</h1>
-        <p style="color: #666;">Спасибо за бронирование. Ждем вас в нашей студии!</p>
+<div class="success-container">
+        <div id="statusIcon" class="success-icon">⏳</div>
+        <h1 id="statusTitle" style="color: #333;">Проверяем статус...</h1>
+        <p id="statusText" style="color: #666;">Пожалуйста, подождите пару секунд.</p>
 
-        <div id="orderDetails" class="booking-details">
-            <p style="text-align: center; color: #888;">Загрузка деталей брони...</p>
+        <div id="orderDetails" class="booking-details" style="display: none;">
+            <p><strong>Зал:</strong> <span id="resHall"></span></p>
+            <p><strong>Дата:</strong> <span id="resDate"></span></p>
+            <p><strong>Время:</strong> <span id="resTime"></span></p>
         </div>
 
         <a href="index.html" class="btn-home">Вернуться на главную</a>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const detailsDiv = document.getElementById('orderDetails');
+        document.addEventListener('DOMContentLoaded', async () => {
             const savedData = localStorage.getItem('lastBooking');
+            
+            if (!savedData) {
+                // Если зашли случайно без брони
+                document.getElementById('statusIcon').textContent = '🔍';
+                document.getElementById('statusTitle').textContent = 'Бронирование не найдено';
+                document.getElementById('statusText').textContent = 'Возможно, вы уже подтвердили его ранее.';
+                return;
+            }
 
-            if (savedData) {
-                const booking = JSON.parse(savedData);
-                // Форматируем красивую дату (чтобы было "10 апреля" вместо "2026-04-10")
-                const d = new Date(booking.date);
-                const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-                const niceDate = `${d.getDate()} ${months[d.getMonth()]}`;
+            const booking = JSON.parse(savedData);
+            
+            // Если в памяти еще старый формат (без ID), просто показываем как раньше, но честно
+            if (!booking.id) {
+                 showPendingUI(booking);
+                 return;
+            }
 
-                detailsDiv.innerHTML = `
-                    <p><strong>Зал:</strong> ${booking.hall}</p>
-                    <p><strong>Дата:</strong> ${niceDate}</p>
-                    <p><strong>Время:</strong> ${booking.time}</p>
-                `;
-                // Очищаем память, чтобы данные не висели вечно
-                localStorage.removeItem('lastBooking');
-            } else {
-                // Если клиент зашел по прямой ссылке, а не после оплаты
-                detailsDiv.innerHTML = '<p style="text-align: center;">Ваша бронь подтверждена!</p>';
+            // Форматируем красивую дату (ваша функция!)
+            const d = new Date(booking.date);
+            const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+            const niceDate = `${d.getDate()} ${months[d.getMonth()]}`;
+
+            // Выводим данные на экран
+            document.getElementById('resHall').textContent = booking.hall;
+            document.getElementById('resDate').textContent = niceDate;
+            document.getElementById('resTime').textContent = booking.time;
+            document.getElementById('orderDetails').style.display = 'block';
+
+            // ФУНКЦИЯ ПРОВЕРКИ СТАТУСА
+            async function checkStatus() {
+                const { data, error } = await supabaseClient
+                    .from('booking')
+                    .select('status, is_confirmed')
+                    .eq('id', booking.id)
+                    .single();
+
+                if (data && (data.status === 'paid' || data.is_confirmed)) {
+                    // ЕСЛИ ОПЛАЧЕНО
+                    document.getElementById('statusIcon').textContent = '✅';
+                    document.getElementById('statusTitle').textContent = 'Оплата прошла успешно!';
+                    document.getElementById('statusText').textContent = 'Спасибо за бронирование. Ждем вас в нашей студии!';
+                    localStorage.removeItem('lastBooking'); // Очищаем память только после реального успеха
+                } else {
+                    // ЕСЛИ НЕ ОПЛАЧЕНО (или человек вернулся назад)
+                    document.getElementById('statusIcon').textContent = '💳';
+                    document.getElementById('statusTitle').textContent = 'Заявка принята';
+                    document.getElementById('statusText').textContent = 'Мы ожидаем подтверждения оплаты. Это время забронировано за вами на 60 минут.';
+                }
+            }
+
+            // Запускаем проверку
+            checkStatus();
+            // Повторяем проверку через 3 секунды, вдруг ЮKassa просто долго думает
+            setTimeout(checkStatus, 3000);
+
+            function showPendingUI(b) {
+                document.getElementById('statusIcon').textContent = '💳';
+                document.getElementById('statusTitle').textContent = 'Заявка принята';
+                document.getElementById('statusText').textContent = 'Мы ожидаем подтверждения оплаты от банка.';
             }
         });
     </script>

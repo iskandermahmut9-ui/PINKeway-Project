@@ -286,7 +286,6 @@ function updateSummaryBox() {
     `;
 }
 
-// --- ОТПРАВКА В БАЗУ ---
 // --- ОТПРАВКА В БАЗУ И ПЕРЕХОД К ОПЛАТЕ ---
 async function submitBooking() {
     const name = document.getElementById('clientName').value;
@@ -304,7 +303,7 @@ async function submitBooking() {
         return;
     }
 
-    // Проверка галочки согласия (если она у вас стоит)
+    // Проверка галочки согласия
     const legalCheckbox = document.getElementById('legalCheckbox');
     if (legalCheckbox && !legalCheckbox.checked) {
         alert('Для бронирования необходимо дать согласие на обработку персональных данных и принять условия оферты.');
@@ -340,11 +339,14 @@ async function submitBooking() {
 
         // Получаем ID только что созданной заявки
         const newBookingId = data[0].id;
+        
+        // НОВОЕ 1: Формируем строку времени заранее
+        const timeStr = bookingData.selectedTimes.join(', ');
 
        // 2. Стучимся в Make.com за ссылкой на оплату
         const makeWebhookUrl = 'https://hook.eu1.make.com/elmko2plh4pxeksxwa88fx39ne2jxv4c';
         
-        // Очищаем телефон: оставляем только цифры (было +7 (915)... станет 7915...)
+        // Очищаем телефон: оставляем только цифры
         const cleanPhone = bookingData.clientPhone.replace(/\D/g, '');
 
         const response = await fetch(makeWebhookUrl, {
@@ -353,23 +355,24 @@ async function submitBooking() {
             body: JSON.stringify({
                 booking_id: newBookingId,
                 amount: bookingData.totalPrice,
-                description: `Бронирование: ${bookingData.hallName}`,
+                // НОВОЕ 2: Подробное описание для чека ЮKassa (клиент увидит дату и время)
+                description: `Бронь: ${bookingData.hallName}, ${bookingData.date} в ${timeStr}`,
                 client_name: bookingData.clientName,
-                client_phone: cleanPhone // Отправляем уже чистые цифры
+                client_phone: cleanPhone 
             })
         });
 
         // 3. Читаем ответ
         if (response.ok) {
-            const result = await response.json(); // Теперь это сработает, когда Make ответит правильно
+            const result = await response.json(); 
             
-            // Важно: в модуле Response мы написали pay_url
             if (result && result.pay_url) {
-                // СОХРАНЯЕМ ДАННЫЕ ДЛЯ СТРАНИЦЫ УСПЕХА
+                // НОВОЕ 3: СОХРАНЯЕМ ДАННЫЕ + ID ДЛЯ "УМНОЙ" СТРАНИЦЫ УСПЕХА
                 localStorage.setItem('lastBooking', JSON.stringify({
+                    id: newBookingId, // <-- Теперь страница успеха знает, что проверять!
                     hall: bookingData.hallName,
                     date: bookingData.date,
-                    time: bookingData.selectedTimes.join(', ')
+                    time: timeStr
                 }));
                 // ПЕРЕНАПРАВЛЯЕМ КЛИЕНТА НА КАССУ
                 window.location.href = result.pay_url;
