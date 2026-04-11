@@ -102,19 +102,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderAdminTimes(); 
     }
 
-    async function renderAdminTimes() {
+   async function renderAdminTimes() {
         const grid = document.getElementById('adminTimeGrid');
         grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #666;">Загрузка расписания...</div>';
         
         const selectedHall = document.getElementById('adminHallSelect').value;
+        const isWaterHall = (selectedHall === 'atlantis' || selectedHall === 'aqualia' || selectedHall === 'Атлантис' || selectedHall === 'Аквалия');
         
+        // 1. Достаем брони (добавили статус в запрос)
         const { data, error } = await supabaseClient
             .from('booking')
-            .select('id, booking_times, is_confirmed')
+            .select('id, booking_times, is_confirmed, status')
             .eq('hall_name', selectedHall)
             .eq('booking_date', adminSelectedDateStr);
 
         let bookedSlots = {}; 
+        let cleaningSlots = [];
 
         if (data) {
             data.forEach(booking => {
@@ -123,38 +126,70 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try { times = JSON.parse(times); } catch (e) { times = [times]; }
                 }
                 if (Array.isArray(times)) {
+                    let maxH = 0;
                     times.forEach(t => {
                         bookedSlots[t] = {
                             is_confirmed: booking.is_confirmed,
                             id: booking.id
                         };
+                        // Ищем последний час для расчета уборки
+                        let h = parseInt(t.split(':')[0]);
+                        if (h > maxH) maxH = h;
                     });
+
+                    // Если это водный зал и бронь подтверждена — вычисляем час уборки
+                    if (isWaterHall && (booking.is_confirmed || booking.status === 'paid')) {
+                        let cleanH = maxH + 1;
+                        if (cleanH <= 20) cleaningSlots.push(`${cleanH}:00`);
+                    }
                 }
             });
         }
 
         grid.innerHTML = '';
         
+        // Данные для проверки "прошлого"
+        const now = new Date();
+        const todayStr = formatDate(now);
+        const currentHour = now.getHours();
+
         for (let h = 9; h <= 20; h++) {
             const timeStr = `${h}:00`;
             const btn = document.createElement('button');
             btn.textContent = timeStr;
             btn.className = 'time-btn ';
 
+            const isPast = (adminSelectedDateStr === todayStr && h <= currentHour);
+            const isCleaning = cleaningSlots.includes(timeStr);
+
             if (bookedSlots[timeStr]) {
                 const bookingInfo = bookedSlots[timeStr];
-                
                 if (bookingInfo.is_confirmed) {
                     btn.className += 'status-confirmed';
-                    btn.title = 'Время занято';
+                    btn.title = 'Занято (Подтверждено)';
+                    btn.disabled = true; // Админ не может кликнуть на уже занятое
                 } else {
                     btn.className += 'status-pending';
-                    btn.title = 'Нажмите, чтобы подтвердить эту бронь';
+                    btn.title = 'Ожидает оплаты. Нажмите, чтобы подтвердить.';
                     btn.onclick = () => confirmBooking(bookingInfo.id);
                 }
+            } else if (isPast) {
+                // Блокировка прошлого
+                btn.style.opacity = '0.4';
+                btn.style.cursor = 'not-allowed';
+                btn.style.backgroundColor = '#f0f0f0';
+                btn.title = 'Это время уже прошло';
+                btn.disabled = true;
+            } else if (isCleaning) {
+                // Визуализация уборки в сетке
+                btn.style.backgroundColor = '#fdf5f8';
+                btn.style.color = '#d880a6';
+                btn.style.border = '1px dashed #d880a6';
+                btn.textContent = 'Уборка';
+                btn.title = 'Технический час после водного зала';
+                btn.disabled = true;
             } else {
                 btn.className += 'status-free';
-                // НОВАЯ СТРОКА: При клике на свободное время открываем модалку
                 btn.onclick = () => openAdminBookingModal(selectedHall, adminSelectedDateStr, timeStr);
             }
             
