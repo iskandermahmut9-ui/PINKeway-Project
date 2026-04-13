@@ -28,7 +28,7 @@ def send_welcome(message):
     markup = InlineKeyboardMarkup()
     webapp_btn = InlineKeyboardButton(
         text="🗓 Открыть календарь", 
-        web_app=telebot.types.WebAppInfo(url="https://iskandermahmut9-ui.github.io/PINKeway-Project/frontend/")
+        web_app=telebot.types.WebAppInfo(url="https://pinkeway.ru/booking.html")
     )
     markup.add(webapp_btn)
     bot.send_message(message.chat.id, "🎀 Добро пожаловать!\n\nНажмите кнопку ниже, чтобы забронировать зал:", reply_markup=markup)
