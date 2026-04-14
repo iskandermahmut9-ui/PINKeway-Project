@@ -51,14 +51,20 @@ def check_new_bookings():
                 bookings = response.json()
                 
                 for b in bookings:
+                    # ПРЕОБРАЗУЕМ ДАТУ: из 2026-05-02 в 02.05.2026
+                    raw_date = b['booking_date']
+                    date_obj = datetime.datetime.strptime(raw_date, '%Y-%m-%d')
+                    formatted_date = date_obj.strftime('%d.%m.%Y')
+
                     times_str = ", ".join(b['booking_times']) if isinstance(b['booking_times'], list) else b['booking_times']
+                    
                     text = (
-                        f"🔔 *НОВАЯ БРОНЬ!*\n\n"
+                        f"🔔 <b>НОВАЯ БРОНЬ!</b>\n\n"
                         f"📍 Зал: {b['hall_name']}\n"
                         f"👤 Клиент: {b['client_name']}\n"
-                        f"📞 Телефон: `{b['client_phone']}`\n"
+                        f"📞 Телефон: <code>{b['client_phone']}</code>\n"
                         f"✈️ Telegram: {b['client_tg']}\n"
-                        f"📅 Дата: {b['booking_date']}\n"
+                        f"📅 Дата: {formatted_date}\n"  # Теперь здесь будет 02.05.2026
                         f"🕒 Время: {times_str}\n"
                         f"💰 Сумма: {b['total_price']} ₽\n"
                     )
