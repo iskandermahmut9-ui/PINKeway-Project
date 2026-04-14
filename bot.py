@@ -63,8 +63,8 @@ def check_new_bookings():
                         f"💰 Сумма: {b['total_price']} ₽\n"
                     )
                     
-                    # Отправляем сообщение
-                    bot.send_message(ADMIN_ID, text, parse_mode="Markdown")
+                    # Отправляем сообщение (МЕНЯЕМ Markdown на HTML)
+                    bot.send_message(ADMIN_ID, text, parse_mode="HTML")
                     
                     # 2. Ставим галочку в базе
                     patch_url = f"{SUPABASE_URL}/rest/v1/booking?id=eq.{b['id']}"
