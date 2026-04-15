@@ -409,12 +409,14 @@ window.submitManualBooking = async function() {
     const bookingData = {
         hall_name: manualBookingData.hall,
         booking_date: manualBookingData.date,
-        booking_times: JSON.stringify([manualBookingData.time]),
+        // БЫЛО: JSON.stringify([manualBookingData.time])
+        // СТАЛО:
+        booking_times: [manualBookingData.time], 
         client_name: name,
         client_phone: phone,
         client_tg: 'Ручная бронь',
         total_price: parseInt(price),
-        status: 'pending', // Магия: ставим в ожидание, включится таймер 60 минут!
+        status: 'pending',
         is_confirmed: false
     };
 
