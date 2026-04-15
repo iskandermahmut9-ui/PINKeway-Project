@@ -407,11 +407,10 @@ window.submitManualBooking = async function() {
     }
 
     const bookingData = {
-        hall_name: manualBookingData.hall,
+        hall_id: manualBookingData.hall, // ДОБАВИЛИ ЭТУ СТРОКУ (технический ID)
+        hall_name: document.getElementById('adminHallSelect').options[document.getElementById('adminHallSelect').selectedIndex].text, // Красивое имя из списка
         booking_date: manualBookingData.date,
-        // БЫЛО: JSON.stringify([manualBookingData.time])
-        // СТАЛО:
-        booking_times: [manualBookingData.time], 
+        booking_times: [manualBookingData.time], // Наш прошлый фикс массива
         client_name: name,
         client_phone: phone,
         client_tg: 'Ручная бронь',
