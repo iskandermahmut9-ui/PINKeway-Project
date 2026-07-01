@@ -185,37 +185,44 @@ nav a:hover { color: var(--pink); }
     padding: 50px 20px 20px;
     color: #999;
 }
-
+/* Исправленный контейнер подвала */
 .footer-content {
     display: flex;
-    justify-content: space-between; /* Раскидываем колонки по краям */
+    justify-content: space-between; 
     align-items: flex-start;
     flex-wrap: wrap;
     max-width: 1200px;
     margin: 0 auto;
-    gap: 30px;
+    gap: 20px; /* Немного уменьшили отступ, чтобы всем хватило места */
 }
 
+/* Задаем фиксированную ширину колонкам, чтобы они не скакали */
 .footer-col {
     flex: 1;
-    min-width: 250px; /* Чтобы на мобилках колонки не сжимались, а падали вниз */
+    min-width: 220px; /* Минимальная ширина, чтобы не сжимались слишком сильно */
 }
 
-/* Левая колонка (Реквизиты) */
-.footer-requisites {
-    text-align: left;
-    font-size: 0.85em;
-    line-height: 1.6;
-}
-.footer-requisites strong { color: #fff; }
-
-/* Центральная колонка (Документы) */
+/* Центрируем блок с документами */
 .footer-legal-links {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: center; /* Центрирует ссылки по горизонтали */
+    text-align: center;  /* Чтобы текст ссылок был ровным */
     gap: 12px;
     font-size: 0.9em;
+}
+
+/* Убедимся, что реквизиты ИП выровнены по левому краю (как у вас и было) */
+.footer-requisites {
+    text-align: left;
+}
+
+/* Убедимся, что контакты прижаты вправо */
+.footer-contacts {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Прижимает всё вправо */
+    gap: 15px;
 }
 .footer-legal-links a { color: var(--pink); text-decoration: none; transition: 0.2s; }
 .footer-legal-links a:hover { color: #fff; }
