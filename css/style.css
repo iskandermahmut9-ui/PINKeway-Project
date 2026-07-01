@@ -261,9 +261,26 @@ nav a:hover { color: var(--pink); }
         align-items: center; 
         text-align: center; 
     }
-    .footer-requisites, .footer-contacts { 
+    .footer-requisites, .footer-contacts, .footer-widget { 
         text-align: center; 
         align-items: center; 
+    }
+    .footer-widget iframe {
+        transform-origin: center center; /* На телефоне увеличиваем из центра */
+        margin-bottom: 15px; /* Небольшой отступ снизу, чтобы не прилипал к ИП */
+    }
+}
+/* Увеличение виджета Яндекса */
+.footer-widget iframe {
+    transform: scale(1.3);
+    transform-origin: left center;
+}
+
+/* Адаптация для телефонов */
+@media (max-width: 768px) {
+    .footer-widget iframe {
+        transform-origin: center center;
+        margin-bottom: 15px;
     }
 }
 /* --- МОДАЛЬНОЕ ОКНО ДЛЯ ФОТО --- */
