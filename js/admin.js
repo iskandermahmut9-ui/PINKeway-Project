@@ -387,7 +387,7 @@ window.openAdminBookingModal = function(hall, date, time) {
     // Очищаем поля
     document.getElementById('adminNewClientName').value = '';
     document.getElementById('adminNewClientPhone').value = '';
-    document.getElementById('adminNewPrice').value = '1700'; // По умолчанию стандарт
+    document.getElementById('adminNewPrice').value = '2000'; // По умолчанию стандарт
     
     document.getElementById('adminBookingModal').style.display = 'flex';
 };
